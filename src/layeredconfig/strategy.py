@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-def add(new, previous=None):
+def add(previous, next_):
     if previous is None:
-        return new
-    return previous + new
+        return next_
+    return previous + next_
 
 
-def collect(new, previous=None):
+def collect(previous, next_):
     if previous is None:
-        return [new]
-    return previous + [new]
+        return [next_]
+    return previous + [next_]
 
 
-def merge(new, previous=None):
-    return add(new, previous)
+def merge(previous, next_):
+    return add(previous, next_)

@@ -347,3 +347,20 @@ def test_read_layered_sources_with_strategies_and_untyped_sources(monkeypatch):
     assert config.x == [[50, 60], [5, 6]]
     assert config.b.c == [20, 2]
     assert config.b.d == [30, 40, 3, 4]
+
+
+@pytest.mark.parametrize('strategy, result', [
+    ('collect', [None, None]),
+    ('add', None),
+])
+def test_read_layered_sources_with_strategies_for_none_values(strategy, result):
+    config = StackedConfig(
+        DictSource({'a': None}),
+        DictSource({'a': None}),
+        strategies={
+            'a': getattr(strategies, strategy),
+        }
+    )
+
+    assert config.a == result
+    assert config.items() == [('a', result)]

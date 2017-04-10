@@ -95,7 +95,7 @@ class LayeredConfig(object):
                     # subsequent keys
                     if key in self._strategy_map:
                         strategy = self._strategy_map[key]
-                        results[key] = strategy(value, results.get(key))
+                        results[key] = strategy(results.get(key), value)
                     elif key in yielded:
                         continue
                     else:
@@ -180,14 +180,14 @@ class LayeredConfig(object):
                 value = self._get_typed_value(key, value)
 
             if strategy:
-                result = strategy(value, result)
+                result = strategy(result, value)
             else:
                 return value
 
         # in the while loop we always ended up in any of the continue
         # statements which means either the key was not found or the key
         # is a sublevel source or it is untyped.
-        if result:
+        if strategy:
             return result
         elif subqueue:
             return self._make_subconfig(subqueue, key)
