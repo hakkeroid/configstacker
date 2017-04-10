@@ -2,8 +2,10 @@
 
 import pytest
 
-from layeredconfig import EtcdStore
-from layeredconfig.sources.etcdstore import EtcdConnector
+from configstacker.sources import EtcdStore
+# the etcdconnector needs to be imported directly
+# as it is not part of the public api
+from configstacker.sources.etcdstore import EtcdConnector
 
 try:
     import requests
@@ -69,7 +71,7 @@ def test_etcd_connector_get_data(monkeypatch, key):
         assert 'recursive' in kwargs['params']
         return Response()
 
-    monkeypatch.setattr('layeredconfig.sources.etcdstore.requests.get', get)
+    monkeypatch.setattr('configstacker.sources.etcdstore.requests.get', get)
     connector.get(key)
 
 
@@ -85,7 +87,7 @@ def test_etcd_connector_set_data(monkeypatch, key, value):
         assert url + '/keys' + key == args[0]
         assert value == kwargs['data']['value']
 
-    monkeypatch.setattr('layeredconfig.sources.etcdstore.requests.put', put)
+    monkeypatch.setattr('configstacker.sources.etcdstore.requests.put', put)
     connector.set((key, value))
 
 

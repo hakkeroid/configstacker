@@ -11,10 +11,10 @@ try:
 except ImportError:
     pass
 
-from layeredconfig import source
+from . import base
 
 
-class EtcdStore(source.Source):
+class EtcdStore(base.Source):
     """Source for etcd stores"""
 
     _DEFAULT_URL = "http://127.0.0.1:2379/v2"

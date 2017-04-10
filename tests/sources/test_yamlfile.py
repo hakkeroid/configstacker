@@ -2,7 +2,7 @@
 
 import pytest
 
-from layeredconfig import YamlFile
+from configstacker.sources import YAMLFile
 
 try:
     import yaml
@@ -30,7 +30,7 @@ def yaml_file(tmpdir, data):
 
 
 def test_lazy_read_yaml_source(yaml_file):
-    config = YamlFile(str(yaml_file.path))
+    config = YAMLFile(str(yaml_file.path))
 
     assert config.a == 1
     assert config.b.c == 2
@@ -49,7 +49,7 @@ def test_lazy_read_yaml_source(yaml_file):
 
 
 def test_write_yaml_source(yaml_file):
-    config = YamlFile(str(yaml_file.path))
+    config = YAMLFile(str(yaml_file.path))
     expected = yaml_file.data
     expected['a'] = 10
     expected['b']['c'] = 20

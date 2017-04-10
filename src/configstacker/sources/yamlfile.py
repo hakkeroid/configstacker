@@ -5,10 +5,10 @@ try:
 except ImportError:
     pass
 
-from layeredconfig import source
+from . import base
 
 
-class YamlFile(source.Source):
+class YAMLFile(base.Source):
     """Source for yaml files"""
 
     def __init__(self, source, **kwargs):
@@ -18,7 +18,7 @@ class YamlFile(source.Source):
             raise ImportError('You are missing the optional'
                               ' dependency "pyyaml"')
 
-        super(YamlFile, self).__init__(**kwargs)
+        super(YAMLFile, self).__init__(**kwargs)
         self._source = source
 
     def _read(self):

@@ -4,7 +4,7 @@ import io
 
 import pytest
 
-from layeredconfig import INIFile
+from configstacker.sources import INIFile
 
 
 def test_ini_source():

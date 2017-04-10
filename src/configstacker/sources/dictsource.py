@@ -2,10 +2,10 @@
 
 import copy
 
-from layeredconfig import source
+from . import base
 
 
-class DictSource(source.Source):
+class DictSource(base.Source):
     """Simple memory key-value source"""
 
     def __init__(self, data=None, **kwargs):

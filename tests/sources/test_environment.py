@@ -2,7 +2,7 @@
 
 import pytest
 
-from layeredconfig import Environment
+from configstacker.sources import Environment
 
 
 def test_read_environment_source(monkeypatch):

@@ -2,10 +2,10 @@
 
 from collections import defaultdict, deque
 
-from .source import Source
+from .sources import Source
 
 
-class LayeredConfig(object):
+class StackedConfig(object):
     """Multi layer config object"""
 
     _initialized = False
@@ -125,7 +125,7 @@ class LayeredConfig(object):
     def dump(self):
         def _dump(obj):
             for key, value in obj.items():
-                if isinstance(value, LayeredConfig):
+                if isinstance(value, StackedConfig):
                     yield key, dict(_dump(value))
                 else:
                     yield key, value
@@ -150,7 +150,7 @@ class LayeredConfig(object):
         return type_info(value)
 
     def _make_subconfig(self, sources, key):
-        return LayeredConfig(*sources,
+        return StackedConfig(*sources,
                              keychain=self._keychain+[key],
                              strategies=self._strategy_map
                              )
@@ -201,8 +201,8 @@ class LayeredConfig(object):
         if any([self._initialized is False,
                 key == '_initialized',
                 key in self.__dict__,
-                key in LayeredConfig.__dict__]):
-            super(LayeredConfig, self).__setattr__(key, value)
+                key in StackedConfig.__dict__]):
+            super(StackedConfig, self).__setattr__(key, value)
         else:
             # will be used if the key could not be found in any source
             # which means that a new key/value shall be added to the

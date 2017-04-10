@@ -2,18 +2,18 @@
 
 import os
 
-from layeredconfig import source
+from . import base
 
 
-class Environment(source.Source):
+class Environment(base.Source):
     """Reads environment variables"""
 
     _is_typed = False
 
-    def __init__(self, prefix=None, token='_', **kwargs):
+    def __init__(self, prefix=None, subsection_token='_', **kwargs):
         super(Environment, self).__init__(**kwargs)
         self.prefix = prefix
-        self.token = token
+        self.subsection_token = subsection_token
 
     def _read(self):
         data = {}
@@ -21,7 +21,7 @@ class Environment(source.Source):
             if not key.startswith(self.prefix):
                 continue
 
-            subheaders = key.lower().split(self.token)[1:]
+            subheaders = key.lower().split(self.subsection_token)[1:]
             subdata = data
             last = subheaders.pop()
             for header in subheaders:

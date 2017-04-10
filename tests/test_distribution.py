@@ -24,8 +24,8 @@ for source, deps in DEPENDENCIES.items():
 @pytest.mark.skipif('yaml' in SKIP, reason='Skip if dependencies are installed')
 def test_missing_yaml_dependencies(monkeypatch):
     with pytest.raises(ImportError) as exc_info:
-        import layeredconfig
-        layeredconfig.YamlFile('/path')
+        from configstacker import sources
+        sources.YAMLFile('/path')
 
     try:
         message = exc_info.value.message
@@ -39,8 +39,8 @@ def test_missing_yaml_dependencies(monkeypatch):
 @pytest.mark.skipif('etcd' in SKIP, reason='Skip if dependencies are installed')
 def test_missing_etcd_dependencies(monkeypatch):
     with pytest.raises(ImportError) as exc_info:
-        import layeredconfig
-        layeredconfig.YamlFile('/path')
+        from configstacker import sources
+        sources.YAMLFile('/path')
 
     try:
         message = exc_info.value.message

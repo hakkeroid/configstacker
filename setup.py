@@ -5,22 +5,17 @@ import sys
 
 from setuptools import setup, find_packages
 
-requirements = [
+REQUIREMENTS = [
     'six',
-]
-
-if sys.version_info < (2, 7, 0):
-    requirements.append('ordereddict >= 1.1')
-
-test_requirements = [
-    # TODO: put package test requirements here
 ]
 
 
 setup(
-    name='mvp',
-    version='0.0.0',
-    description='Manages configuration coming from config files, environment variables, command line arguments, code defaults or other sources',
+    name='configstacker',
+    version='0.1.0',
+    description='Aggregates multiple configuration sources into one'
+                ' configuration object with dot-notation or'
+                ' dictionary-like access.',
     author='Philipp Busch',
     author_email='hakkeroid@philippbusch.de',
     packages=find_packages(where='src'),
@@ -28,9 +23,9 @@ setup(
     include_package_data=True,
     license="BSD",
     zip_safe=False,
-    keywords='configuration',
+    keywords='multi configs configuration',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
@@ -41,8 +36,8 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Software Development :: Libraries',
     ],
-
-    install_requires=requirements,
-    tests_require=test_requirements
+    install_requires=REQUIREMENTS,
 )

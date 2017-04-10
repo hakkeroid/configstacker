@@ -5,10 +5,10 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
-from layeredconfig import source
+from . import base
 
 
-class INIFile(source.Source):
+class INIFile(base.Source):
     """Source for ini files"""
 
     _is_typed = False

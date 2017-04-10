@@ -4,7 +4,6 @@ from collections import namedtuple
 
 import six
 
-CustomType = namedtuple('CustomType', 'customize reset')
 MetaInfo = namedtuple('MetaInfo', 'readonly is_typed source_name')
 
 
@@ -65,7 +64,13 @@ class AbstractSource(object):
             return value
 
     def items(self):
-        return six.iteritems(self._get_data())
+        return sorted(six.iteritems(self._get_data()))
+
+    def values(self):
+        return sorted(six.iterkeys(self._get_data()))
+
+    def keys(self):
+        return sorted(six.iterkeys(self._get_data()))
 
     def update(self, *others):
         self._check_writable()
@@ -198,16 +203,19 @@ class CacheMixin(AbstractSource):
         super(CacheMixin, self).__init__(*args, **kwargs)
 
     def write_cache(self):
+        self._check_writable()
+
         try:
             self._write(self._cache)
         except NotImplementedError:
             self._parent.write_cache()
 
     def _get_data(self):
-        if self._use_cache:
-            if not self._cache:
-                self._cache = self._read()
+        if self._use_cache and self._cache:
             return self._cache
+
+        self._cache = super(CacheMixin, self)._get_data()
+        return self._cache
 
         return super(CacheMixin, self)._get_data()
 

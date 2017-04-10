@@ -2,14 +2,14 @@
 
 import json
 
-from layeredconfig import source
+from . import base
 
 
-class JsonFile(source.Source):
+class JSONFile(base.Source):
     """Source for json files"""
 
     def __init__(self, source, **kwargs):
-        super(JsonFile, self).__init__(**kwargs)
+        super(JSONFile, self).__init__(**kwargs)
         self._source = source
 
     def _read(self):
