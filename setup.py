@@ -9,6 +9,10 @@ REQUIREMENTS = [
     'six',
 ]
 
+EXTRA_REQUIREMENTS = {
+    'yaml': ['pyyaml'],
+    'etcd': ['requests'],
+}
 
 setup(
     name='configstacker',
@@ -40,4 +44,5 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
     install_requires=REQUIREMENTS,
+    extras_require=EXTRA_REQUIREMENTS
 )
