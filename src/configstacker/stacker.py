@@ -15,7 +15,7 @@ class StackedConfig(object):
         if not sources:
             sources = [DictSource()]
         _validate_sources(sources)
-        self._source_list = sources
+        self.source_list = list(sources)
 
         # _keychain is a list of keys that led from the root
         # config to this (sub)config
@@ -39,7 +39,7 @@ class StackedConfig(object):
     @property
     def _sources(self):
         """Return the sublevels of the sources according to the keychain"""
-        for source in self._reversed(self._source_list):
+        for source in self._reversed(self.source_list):
             traversed_source = source
             for key in self._keychain:
                 traversed_source = traversed_source[key]
@@ -57,7 +57,7 @@ class StackedConfig(object):
         if not filter_fn:
             filter_fn = lambda s: s
 
-        for source in self._reversed(self._source_list):
+        for source in self._reversed(self.source_list):
             if not filter_fn(source):
                 continue
             traversed_source = source
@@ -250,7 +250,7 @@ class StackedConfig(object):
                     yield key
 
     def __repr__(self):
-        return repr(self.dump())
+        return '%s(<%s>)' % (self.__class__.__name__, repr(self.dump()))
 
 
 def _validate_sources(sources):

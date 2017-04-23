@@ -176,7 +176,7 @@ class AbstractSource(object):
         return self._get_data() == other
 
     def __repr__(self):
-        return repr(self._get_data())
+        return '%s(%s)' % (self.__class__.__name__, repr(self._get_data()))
 
 
 class LockedSourceMixin(AbstractSource):

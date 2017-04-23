@@ -413,3 +413,21 @@ def test_read_stacked_sources_with_strategies_for_none_values(strategy, result):
 
     assert config.a == result
     assert config.items() == [('a', result)]
+
+
+def test_expose_sources_for_manipulation():
+    source1 = DictSource({'a': 1, 'b': {'c': 2}})
+    source2 = DictSource({'a': 10, 'b': {'c': 20}})
+    source3 = DictSource({'x': 6, 'b': {'y': 7}})
+    config = StackedConfig()
+
+    assert config.dump() == {}
+
+    config.source_list.append(source1)
+    assert config == source1
+
+    config.source_list.append(source2)
+    assert config == source2
+
+    config.source_list.insert(0, source3)
+    assert config.dump() == {'a': 10, 'b': {'c': 20, 'y': 7}, 'x': 6}
