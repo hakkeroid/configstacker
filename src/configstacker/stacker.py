@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from collections import MutableSequence, defaultdict, deque
-from itertools import chain
+from collections import defaultdict, deque
 
 from . import types
 from .sources import DictSource, Source
+
+try:
+    from collections.abc import MutableSequence
+except ImportError:
+    from collections import MutableSequence
 
 
 class SourceIterator(MutableSequence):
