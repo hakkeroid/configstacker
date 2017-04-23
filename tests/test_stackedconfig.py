@@ -176,16 +176,35 @@ def test_source_items(monkeypatch):
     assert items == [('c', 2), ('y', 7)]
 
 
-@pytest.mark.parametrize('reverse', (1, -1))
-def test_source_items_prevent_overriding_subsections_with_values(reverse):
+@pytest.mark.parametrize('reverse, values', [
+    (False, (1, 20)),
+    (True, (1000, 200)),
+])
+def test_reverse_source_order(reverse, values):
+    sources = [
+        DictSource({'a': 1, 'b': {}}),
+        DictSource({'a': 10, 'b': {'c': 20}}),
+        DictSource({'a': 100, 'b': {'c': 200}}),
+        DictSource({'a': 1000, 'b': {}}),
+    ]
+
+    config = StackedConfig(*sources, reverse=reverse)
+
+    assert config.a == values[0]
+    assert config.b.c == values[1]
+
+
+@pytest.mark.parametrize('reverse', (True, False))
+def test_source_items_prevent_shadowing_between_subsections_and_values(reverse):
     sources = [
         DictSource({'a': 1, 'b': {'c': 2}}),
-        DictSource({'x': 6, 'b': 5})
+        DictSource({'x': 6, 'b': 5}),
     ]
-    config = StackedConfig(*sources[::reverse])
+    config = StackedConfig(*sources, reverse=reverse)
 
     with pytest.raises(ValueError) as exc_info:
         list(config.items())
+
     assert "conflicts" in str(exc_info.value)
 
 

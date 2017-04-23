@@ -17,12 +17,17 @@ class StackedConfig(object):
         # _keychain is a list of keys that led from the root
         # config to this (sub)config
         self._keychain = kwargs.get('keychain', [])
+        # convenience functionality that allows to specify
+        # the priority for traversing the sources
+        self._reversed = reversed if kwargs.pop('reverse', True) else lambda x: x
+
+        # activate setattr
         self._initialized = True
 
     @property
     def _sources(self):
         """Return the sublevels of the sources according to the keychain"""
-        for source in reversed(self._source_list):
+        for source in self._reversed(self._source_list):
             traversed_source = source
             for key in self._keychain:
                 traversed_source = traversed_source[key]
@@ -40,7 +45,7 @@ class StackedConfig(object):
         if not filter_fn:
             filter_fn = lambda s: s
 
-        for source in reversed(self._source_list):
+        for source in self._reversed(self._source_list):
             if not filter_fn(source):
                 continue
             traversed_source = source
