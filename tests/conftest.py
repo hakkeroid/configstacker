@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-pytest_plugins = ['helpers_namespace']
-
 import functools
 
 import pytest
+
+pytest_plugins = ['helpers_namespace']
 
 
 @pytest.fixture

@@ -51,5 +51,3 @@ def test_ini_source_subsections():
     assert config.b.c == '2'
     assert config.b.d.e == '3'
     assert config['b/d/f'].g == '4'
-
-

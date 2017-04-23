@@ -2,7 +2,7 @@
 
 from collections import defaultdict, deque
 
-from .sources import Source, DictSource
+from .sources import DictSource, Source
 
 
 class StackedConfig(object):
