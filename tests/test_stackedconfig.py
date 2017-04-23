@@ -8,10 +8,28 @@ from configstacker import StackedConfig, strategies
 from configstacker.sources import DictSource, Environment, INIFile
 
 
-def test_raise_keyerrors_on_empty_stacked_config():
+def test_use_dictsource_on_empty_stacked_config():
     config = StackedConfig()
-    with pytest.raises(KeyError):
-        assert config.a
+
+    assert config.dump() == {}
+
+
+@pytest.mark.parametrize('source, error_type', [
+    ({}, 'dict'),
+    (None, 'NoneType'),
+])
+def test_raise_exception_on_wrong_source_types(source, error_type):
+    with pytest.raises(ValueError) as exc_info:
+        StackedConfig(source)
+
+    assert "not '%s'" % error_type in str(exc_info)
+
+
+def test_raise_exception_on_unknown_parameters():
+    with pytest.raises(TypeError) as exc_info:
+        StackedConfig(unknown='value')
+
+    assert "unknown" in str(exc_info)
 
 
 def test_set_keychain():

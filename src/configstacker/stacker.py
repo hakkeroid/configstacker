@@ -2,24 +2,36 @@
 
 from collections import defaultdict, deque
 
-from .sources import Source
+from .sources import Source, DictSource
 
 
 class StackedConfig(object):
     """Multi layer config object"""
 
+    # disable setattr as long as we initialize instance attributes
     _initialized = False
 
     def __init__(self, *sources, **kwargs):
+        if not sources:
+            sources = [DictSource()]
+        _validate_sources(sources)
         self._source_list = sources
-        self._strategy_map = kwargs.get('strategies', {})
 
         # _keychain is a list of keys that led from the root
         # config to this (sub)config
-        self._keychain = kwargs.get('keychain', [])
+        self._keychain = kwargs.pop('keychain', [])
+
+        # custom strategies that describes how to merge multiple
+        # values of the same key
+        self._strategy_map = kwargs.pop('strategies', {})
+
         # convenience functionality that allows to specify
         # the priority for traversing the sources
         self._reversed = reversed if kwargs.pop('reverse', True) else lambda x: x
+
+        # inform user about unknown parameters
+        if kwargs:
+            raise TypeError('unknown parameters specified %s' % kwargs)
 
         # activate setattr
         self._initialized = True
@@ -144,15 +156,9 @@ class StackedConfig(object):
             except KeyError:
                 continue
 
-            type_info = self._get_type_info(typed_value)
-            return self._convert_value_to_type(value, type_info)
+            type_info = _get_type_info(typed_value)
+            return _convert_value_to_type(value, type_info)
         return value
-
-    def _get_type_info(self, value):
-        return type(value)
-
-    def _convert_value_to_type(self, value, type_info):
-        return type_info(value)
 
     def _make_subconfig(self, sources, key):
         return StackedConfig(*sources,
@@ -200,33 +206,33 @@ class StackedConfig(object):
             raise KeyError("Key '%s' was not found" % key)
 
     def __setattr__(self, attr, value):
-        self[attr] = value
+        if any([self._initialized is False,
+                attr == '_initialized',
+                attr in self.__dict__,
+                attr in StackedConfig.__dict__]):
+            super(StackedConfig, self).__setattr__(attr, value)
+        else:
+            self[attr] = value
 
     def __setitem__(self, key, value):
-        if any([self._initialized is False,
-                key == '_initialized',
-                key in self.__dict__,
-                key in StackedConfig.__dict__]):
-            super(StackedConfig, self).__setattr__(key, value)
+        # will be used if the key could not be found in any source
+        # which means that a new key/value shall be added to the
+        # config.
+        writable_source = None
+
+        for root_source, source in self._sources:
+            if writable_source is None and root_source.is_writable():
+                writable_source = source
+
+            if key in source:
+                source[key] = value
+                return
+
+        # no source was found so write it to first writable source
+        if writable_source is not None:
+            writable_source[key] = value
         else:
-            # will be used if the key could not be found in any source
-            # which means that a new key/value shall be added to the
-            # config.
-            writable_source = None
-
-            for root_source, source in self._sources:
-                if writable_source is None and root_source.is_writable():
-                    writable_source = source
-
-                if key in source:
-                    source[key] = value
-                    return
-
-            # no source was found so write it to first writable source
-            if writable_source:
-                writable_source[key] = value
-            else:
-                raise TypeError('No writable sources found')
+            raise TypeError('No writable sources found')
 
     def __eq__(self, other):
         return self.dump() == other.dump()
@@ -245,3 +251,18 @@ class StackedConfig(object):
 
     def __repr__(self):
         return repr(self.dump())
+
+
+def _validate_sources(sources):
+    for source in sources:
+        if not isinstance(source, Source):
+            msg = "A source must be a subclass of 'configstacker.sources.Source' not '%s'"
+            raise ValueError(msg % source.__class__.__name__)
+
+
+def _get_type_info(value):
+    return type(value)
+
+
+def _convert_value_to_type(value, type_info):
+    return type_info(value)
