@@ -33,7 +33,13 @@ class SourceMeta(type):
 
 @six.add_metaclass(SourceMeta)
 class AbstractSource(object):
-    """Source object"""
+    """A source tree container
+
+    The AbstractSource handles traversing and accessing
+    the underlying data map. Nested values will be returned
+    as another source object which keeps a reverse link
+    to the parent source.
+    """
 
     _initialized = False
 
@@ -51,6 +57,12 @@ class AbstractSource(object):
         # mixins can make use of that to apply attributes to subsources.
         # therefore they should not pop values from kwargs
         self._kwargs = kwargs
+
+    def get_root(self):
+        try:
+            return self._parent.get_root()
+        except AttributeError:
+            return self
 
     def is_writable(self):
         return not self._meta.readonly

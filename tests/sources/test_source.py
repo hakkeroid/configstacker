@@ -18,6 +18,9 @@ def test_read_dict_source():
     data = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
     config = DictSource(data)
 
+    # only count toplevel keys
+    assert len(config) == 2
+
     assert config.a == 1
     assert config.b.c == 2
     assert config.b.d == {'e': 3}
@@ -205,3 +208,10 @@ def test_write_cached_dict_source():
     config.write_cache()
 
     assert config._data == {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+
+
+def test_get_source_root():
+    data = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+    config = DictSource(data, cached=True)
+
+    assert config.b.d.get_root() is config

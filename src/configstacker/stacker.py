@@ -1,8 +1,83 @@
 # -*- coding: utf-8 -*-
 
 from collections import defaultdict, deque
+try:
+    from collections.abc import MutableSequence
+except ImportError:
+    from collections import MutableSequence
 
 from .sources import DictSource, Source
+
+
+class SourceIterator(MutableSequence):
+
+    def __init__(self, *sources, **kwargs):
+        self._validate_sources(sources)
+        self._sources = list(sources)
+
+        # _keychain is a list of keys that leads from the root
+        # config to the subconfig
+        self.keychain = kwargs.pop('keychain', [])
+
+        # convenience functionality that allows to specify
+        # the priority for traversing the sources
+        self.reverse = kwargs.pop('reverse', None)
+
+        if kwargs:
+            raise ValueError('Unknown parameters: %s' % kwargs)
+
+    def insert(self, pos, item):
+        self._validate_sources([item])
+        self._sources.insert(pos, item)
+
+    def typed(self):
+        def filter_by_type(source):
+            return source.is_typed()
+
+        for source in self._iter_sources(filter_by_type):
+            yield source
+
+    def _iter_sources(self, filter_fn=None):
+        if not filter_fn:
+            def filter_fn(s):
+                return True
+
+        order = reversed if self.reverse else lambda x: x
+
+        # return the sublevels of the sources according to the
+        # keychain
+        for source in order(self._sources):
+            if filter_fn(source) is False:
+                continue
+            traversed_source = source
+            for key in self.keychain:
+                traversed_source = traversed_source[key]
+            yield traversed_source
+
+    def _validate_sources(self, sources):
+        for source in sources:
+            if not isinstance(source, Source):
+                msg = "A source must be a subclass of 'configstacker.sources.Source' not '%s'"
+                raise ValueError(msg % source.__class__.__name__)
+
+    def __len__(self):
+        return len(self._sources)
+
+    def __getitem__(self, index):
+        return self._sources[index]
+
+    def __setitem__(self, index, value):
+        self._validate_sources([value])
+        self._sources[index] = value
+
+    def __delitem__(self, item):
+        del self._sources[item]
+
+    def __iter__(self):
+        return self._iter_sources()
+
+    def __repr__(self):
+        return 'SourceIterator(%s)' % repr(self._sources)
 
 
 class StackedConfig(object):
@@ -14,20 +89,20 @@ class StackedConfig(object):
     def __init__(self, *sources, **kwargs):
         if not sources:
             sources = [DictSource()]
-        _validate_sources(sources)
-        self.source_list = list(sources)
 
         # _keychain is a list of keys that led from the root
         # config to this (sub)config
         self._keychain = kwargs.pop('keychain', [])
 
+        self.source_list = SourceIterator(
+            *sources,
+            keychain=self._keychain,
+            reverse=kwargs.pop('reverse', True)
+        )
+
         # custom strategies that describes how to merge multiple
         # values of the same key
         self._strategy_map = kwargs.pop('strategies', {})
-
-        # convenience functionality that allows to specify
-        # the priority for traversing the sources
-        self._reversed = reversed if kwargs.pop('reverse', True) else lambda x: x
 
         # inform user about unknown parameters
         if kwargs:
@@ -35,35 +110,6 @@ class StackedConfig(object):
 
         # activate setattr
         self._initialized = True
-
-    @property
-    def _sources(self):
-        """Return the sublevels of the sources according to the keychain"""
-        for source in self._reversed(self.source_list):
-            traversed_source = source
-            for key in self._keychain:
-                traversed_source = traversed_source[key]
-            yield source, traversed_source
-
-    @property
-    def _typed_sources(self):
-        def filter_by_type(source):
-            return source.is_typed()
-
-        for root_source, source in self._iter_sources(filter_by_type):
-            yield root_source, source
-
-    def _iter_sources(self, filter_fn=None):
-        if not filter_fn:
-            filter_fn = lambda s: s
-
-        for source in self._reversed(self.source_list):
-            if not filter_fn(source):
-                continue
-            traversed_source = source
-            for key in self._keychain:
-                traversed_source = traversed_source[key]
-            yield source, traversed_source
 
     def get(self, name, default=None):
         try:
@@ -78,7 +124,7 @@ class StackedConfig(object):
             yielded = set()
             results = {}
 
-            for root_source, source in self._sources:
+            for source in self.source_list:
                 for key, value in source.items():
                     # identical keys from different sources that have
                     # dicts as values needs to be merged
@@ -91,9 +137,8 @@ class StackedConfig(object):
                                    " with a higher prioritized source"
                                    " that wants the same value to be a"
                                    " non-sectional instead")
-                            raise ValueError(msg % (key,
-                                root_source._meta.source_name))
-                        subqueues[key].appendleft(root_source)
+                            raise ValueError(msg % (key, source._meta.source_name))
+                        subqueues[key].appendleft(source.get_root())
                         continue
 
                     if key in subqueues:
@@ -102,8 +147,7 @@ class StackedConfig(object):
                                " with a higher prioritized source"
                                " that wants the same value to be a"
                                " subsection instead.")
-                        raise ValueError(msg % (key,
-                            root_source._meta.source_name))
+                        raise ValueError(msg % (key, source._meta.source_name))
 
                     if not source.is_typed():
                         value = self._get_typed_value(key, value)
@@ -150,7 +194,7 @@ class StackedConfig(object):
         return dict(_dump(self))
 
     def _get_typed_value(self, key, value):
-        for root_source, source in self._typed_sources:
+        for source in self.source_list.typed():
             try:
                 typed_value = source[key]
             except KeyError:
@@ -177,14 +221,14 @@ class StackedConfig(object):
         strategy = self._strategy_map.get(key)
         result = None
 
-        for root_source, source in self._sources:
+        for source in self.source_list:
             try:
                 value = source[key]
             except KeyError:
                 continue
 
             if isinstance(value, Source):
-                subqueue.appendleft(root_source)
+                subqueue.appendleft(source.get_root())
                 continue
 
             if not source.is_typed():
@@ -220,8 +264,8 @@ class StackedConfig(object):
         # config.
         writable_source = None
 
-        for root_source, source in self._sources:
-            if writable_source is None and root_source.is_writable():
+        for source in self.source_list:
+            if writable_source is None and source.is_writable():
                 writable_source = source
 
             if key in source:
@@ -243,21 +287,16 @@ class StackedConfig(object):
     def __iter__(self):
         yielded = set()
 
-        for root_source, source in self._sources:
+        for source in self.source_list:
             for key in source:
-                if key not in yielded:
-                    yielded.add(key)
-                    yield key
+                if key in yielded:
+                    continue
+
+                yielded.add(key)
+                yield key
 
     def __repr__(self):
-        return '%s(<%s>)' % (self.__class__.__name__, repr(self.dump()))
-
-
-def _validate_sources(sources):
-    for source in sources:
-        if not isinstance(source, Source):
-            msg = "A source must be a subclass of 'configstacker.sources.Source' not '%s'"
-            raise ValueError(msg % source.__class__.__name__)
+        return '%s(%s)' % (self.__class__.__name__, repr(self.dump()))
 
 
 def _get_type_info(value):
