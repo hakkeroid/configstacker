@@ -45,7 +45,12 @@ class AbstractSource(object):
         # kwargs.get would override the metaclass settings
         # so only change it if it's really given.
         if 'meta' in kwargs:
-            self._meta = kwargs['meta']
+            self._meta = kwargs.pop('meta')
+
+        # save leftover kwargs to pass them to subsource instances
+        # mixins can make use of that to apply attributes to subsources.
+        # therefore they should not pop values from kwargs
+        self._kwargs = kwargs
 
     def is_writable(self):
         return not self._meta.readonly
@@ -61,7 +66,7 @@ class AbstractSource(object):
             return self[name]
         except KeyError:
             self[name] = value
-            return value
+            return self[name]
 
     def items(self):
         return sorted(six.iteritems(self._get_data()))
@@ -140,6 +145,7 @@ class AbstractSource(object):
         if isinstance(attr, dict):
             return Source(parent=(self, key),
                           meta=self._meta,
+                          **self._kwargs
                           )
         return attr
 
@@ -232,7 +238,7 @@ class CustomTypeMixin(AbstractSource):
     def __init__(self, *args, **kwargs):
         # will be applied to child classes as sublevel sources
         # do not need caching.
-        self._custom_types = kwargs.pop('type_map', {})
+        self._custom_types = kwargs.get('type_map', {})
 
         super(CustomTypeMixin, self).__init__(*args, **kwargs)
 
@@ -262,7 +268,6 @@ class CustomTypeMixin(AbstractSource):
     def __getitem__(self, key):
         attr = super(CustomTypeMixin, self).__getitem__(key)
         if isinstance(attr, Source):
-            attr._custom_types = self._custom_types
             return attr
 
         return self._to_custom_type(key, attr)
@@ -273,7 +278,26 @@ class CustomTypeMixin(AbstractSource):
         super(CustomTypeMixin, self).__setitem__(key, value)
 
 
+class DefaultValueMixin(AbstractSource):
+
+    def __init__(self, *args, **kwargs):
+        self._default_value = kwargs.get('default_for_missing', None)
+
+        super(DefaultValueMixin, self).__init__(*args, **kwargs)
+
+    def __getitem__(self, key):
+        try:
+            return super(DefaultValueMixin, self).__getitem__(key)
+        except KeyError as err:
+            if self._default_value is not None:
+                super(DefaultValueMixin, self).__setattr__(
+                        key, self._default_value)
+                return super(DefaultValueMixin, self).__getitem__(key)
+            raise
+
+
 class Source(CacheMixin,
+             DefaultValueMixin,
              CustomTypeMixin,
              LockedSourceMixin,
              AbstractSource

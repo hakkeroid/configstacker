@@ -107,6 +107,27 @@ def test_source_setdefault():
     assert config.nonexisting == 10
 
 
+def test_source_setdefault_as_subsection():
+    config = DictSource()
+
+    with pytest.raises(KeyError):
+        config.a.b = 1
+
+    config.setdefault('a', {}).b = 1
+
+    assert config.a.b == 1
+
+
+def test_set_missing_key_to_default_value():
+    config = DictSource(default_for_missing={})
+
+    config.a.b = 1
+    config['x'].y = 2
+
+    assert config.a.b == 1
+    assert config.x.y == 2
+
+
 @pytest.mark.parametrize('container', [
     dict, DictSource
 ])

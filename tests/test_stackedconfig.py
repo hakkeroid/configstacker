@@ -87,6 +87,19 @@ def test_stacked_len():
     assert len(config) == 3
 
 
+def test_write_to_empty_sources():
+    source1 = DictSource(default_for_missing={})
+    source2 = DictSource()
+    config = StackedConfig(source2, source1)
+
+    config.a = 10
+    config['b'].c = 20
+
+    assert source1.a == 10
+    assert source1.b.c == 20
+    assert source2.dump() == {}
+
+
 def test_write_stacked_source():
     source1 = DictSource({'a': 1, 'b': {'c': 2}})
     source2 = DictSource({'x': 6, 'b': {'y': 7, 'd': {'e': 8}}})
