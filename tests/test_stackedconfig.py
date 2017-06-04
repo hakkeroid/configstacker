@@ -354,6 +354,53 @@ def test_stacked_config_with_untyped_source():
     assert config.b.d.e == '30'
 
 
+def test_stacked_config_with_type_conversions():
+    typed_source1 = {
+        'a': 1,
+        'b': 3.0,
+        'c': 4+5j,
+        'd': 'some string',
+        'e': u'some unicode',
+        'f': True,
+        'g': False,
+        'h': False,
+        'i': [1, 2],
+        'j': (1, 2),
+        'k': set([1, 2]),
+    }
+    untyped_source1 = io.StringIO(pytest.helpers.unindent(u"""
+        [__root__]
+        a=10
+        b=20.01
+        c=5+6j
+        d=some other string
+        e=some other unicode
+        f=false
+        g=True
+        h=yes
+        i=3, 4
+        j=3, 4
+        k=3, 4
+    """))
+    typed1 = DictSource(typed_source1)
+    untyped1 = INIFile(untyped_source1)
+    config = StackedConfig(typed1, untyped1)
+
+    assert config.a == 10
+    assert config.b == 20.01
+    assert config.c == 5+6j
+    assert config.d == 'some other string'
+    assert config.e == u'some other unicode'
+    assert config.f == False
+    assert config.g == True
+    assert config.h == "yes"
+    # the individual values cannot be converted
+    # as we do not know their intended type
+    assert config.i == ['3', '4']
+    assert config.j == ('3', '4')
+    assert config.k == set(['3', '4'])
+
+
 def test_read_stacked_sources_with_strategies():
     config = StackedConfig(
         DictSource({'a': 1, 'x': [5, 6], 'b': {'c': 2, 'd': [3, 4]}}),

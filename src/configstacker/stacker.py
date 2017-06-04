@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from collections import defaultdict, deque
-try:
-    from collections.abc import MutableSequence
-except ImportError:
-    from collections import MutableSequence
+from collections import MutableSequence, defaultdict, deque
+from itertools import chain
 
+from . import types
 from .sources import DictSource, Source
 
 
@@ -200,8 +198,8 @@ class StackedConfig(object):
             except KeyError:
                 continue
 
-            type_info = _get_type_info(typed_value)
-            return _convert_value_to_type(value, type_info)
+            type_info = types.get_type_info(typed_value)
+            return types.convert_value_to_type(value, type_info)
         return value
 
     def _make_subconfig(self, sources, key):
@@ -297,11 +295,3 @@ class StackedConfig(object):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, repr(self.dump()))
-
-
-def _get_type_info(value):
-    return type(value)
-
-
-def _convert_value_to_type(value, type_info):
-    return type_info(value)
