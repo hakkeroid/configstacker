@@ -16,23 +16,40 @@ class INIFile(base.Source):
     def __init__(self, source, subsection_token=None, **kwargs):
         super(INIFile, self).__init__(**kwargs)
         self._source = source
-        self._parser = configparser.ConfigParser()
-        self._parser.readfp(source)
         self._token = subsection_token
+        self._parser = _parse_source(source)
 
     def _read(self):
         data = {}
         for section in self._parser.sections():
-            sublevel = dict(self._parser.items(section))
             if section == '__root__':
-                data.update(sublevel)
+                subsections = []
             elif self._token and self._token in section:
-                subheaders = section.split(self._token)
-                last = subheaders.pop()
-                subdata = data
-                for header in subheaders:
-                    subdata = subdata.setdefault(header, {})
-                subdata[last] = sublevel
+                subsections = section.split(self._token)
             else:
-                data.setdefault(section, {}).update(sublevel)
+                subsections = [section]
+
+            items = self._parser.items(section)
+            subdict = _make_subdicts(data, subsections)
+            subdict.update(items)
+
         return data
+
+
+def _make_subdicts(base, subkeys):
+    while subkeys:
+        subsection = subkeys.pop(0)
+        base = base.setdefault(subsection, {})
+    return base
+
+
+def _parse_source(source):
+    parser = configparser.ConfigParser()
+
+    try:
+        with open(source) as fh:
+            parser._read(fh, fh.name)
+    except TypeError:
+        parser._read(source, source)
+
+    return parser
