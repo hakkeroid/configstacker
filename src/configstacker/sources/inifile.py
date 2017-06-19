@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import deque
 try:
     import configparser
 except ImportError:
@@ -34,6 +35,39 @@ class INIFile(base.Source):
             subdict.update(items)
 
         return data
+
+    def _write(self, data):
+        data_ = {}
+
+        sections = deque([(None, data.items())])
+
+        while sections:
+            section, items = sections.popleft()
+
+            if not items:
+                data_[section] = items
+                continue
+
+            for key, value in items:
+                if isinstance(value, dict):
+                    if section is None:
+                        name = key
+                    else:
+                        name = self._token.join([section, key])
+                    sections.append((name, value.items()))
+                else:
+                    data_.setdefault(section or '__root__', []).append((key, value))
+
+        existing_sections = self._parser.sections()
+
+        for section, items in data_.items():
+            if section not in existing_sections:
+                self._parser.add_section(section)
+            for key, value in items:
+                self._parser.set(section, key, str(value))
+
+        with open(self._source, 'w') as fh:
+            self._parser.write(fh)
 
 
 def _make_subdicts(base, subkeys):
