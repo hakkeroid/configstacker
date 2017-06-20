@@ -1,51 +1,32 @@
 # -*- coding: utf-8 -*-
 
+import pkg_resources
 import pytest
 
-DEPENDENCIES = {
-    'yaml': ['yaml'],
-    'etcd': ['requests'],
+SOURCE_FILE_MAP = {
+    'yaml': 'YAMLFile',
+    'etcd': 'EtcdStore',
 }
-SKIP = []
 
-# make sure library does not break and informs user about
-# missing dependency. Those tests are only in the minimal
-# test environment relevant. So skip them if dependencies
-# are importable.
-for source, deps in DEPENDENCIES.items():
-    for dep in deps:
-        try:
-            __import__(dep)
-            SKIP.append(source)
-        except:
-            pass
+DIST = pkg_resources.get_distribution('configstacker')
+
+@pytest.fixture(params=DIST.extras)
+def dependencies(request):
+    extra = request.param
+    source = SOURCE_FILE_MAP[extra]
+    requirements = DIST.requires(extras=[extra])[1:]
+
+    yield extra, source, requirements
 
 
-@pytest.mark.skipif('yaml' in SKIP, reason='Skip if dependencies are installed')
-def test_missing_yaml_dependencies(monkeypatch):
-    with pytest.raises(ImportError) as exc_info:
-        from configstacker import sources
-        sources.YAMLFile('/path')
+def test_dependencies(dependencies):
+    extra, source, requirements = dependencies
 
-    try:
-        message = exc_info.value.message
-    except AttributeError:
-        # py33, py34 compatibility
-        message = exc_info.value.msg
+    for requirement in requirements:
+        installed = pkg_resources.working_set.find(requirement)
+        if not installed:
+            with pytest.raises(ImportError) as exc_info:
+                from configstacker import sources
+                getattr(sources, source)('some source')
 
-    assert 'optional dependency' in message
-
-
-@pytest.mark.skipif('etcd' in SKIP, reason='Skip if dependencies are installed')
-def test_missing_etcd_dependencies(monkeypatch):
-    with pytest.raises(ImportError) as exc_info:
-        from configstacker import sources
-        sources.YAMLFile('/path')
-
-    try:
-        message = exc_info.value.message
-    except AttributeError:
-        # py33, py34 compatibility
-        message = exc_info.value.msg
-
-    assert 'optional dependency' in message
+            assert 'optional dependency' in str(exc_info.value)
