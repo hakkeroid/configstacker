@@ -3,7 +3,7 @@
 import pytest
 
 from configstacker.sources import DictSource
-from configstacker.stacker import SourceIterator
+from configstacker.stacker import SourceList
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def sources():
 
 
 def test_init_empty_source_list():
-    sources = SourceIterator()
+    sources = SourceList()
 
     assert list(sources) == []
     assert len(sources) == 0
@@ -26,14 +26,14 @@ def test_init_empty_source_list():
 ])
 def test_adding_invalid_source_fails(source, error):
     with pytest.raises(ValueError) as exc_info:
-        SourceIterator(source)
+        SourceList(source)
 
     assert error in str(exc_info.value)
 
 
 def test_calling_with_invalid_parameters():
     with pytest.raises(ValueError) as exc_info:
-        SourceIterator(unknown=False)
+        SourceList(unknown=False)
 
     assert "{'unknown': False}" in str(exc_info.value)
 
@@ -42,7 +42,7 @@ def test_iterate_sources():
     source1 = DictSource({'a': 1, 'b': {'c': 2}})
     source2 = DictSource({'m': 10, 'b': {'o': 20}})
 
-    sources = SourceIterator(source1, source2)
+    sources = SourceList(source1, source2)
 
     assert list(sources) == [source1, source2]
 
@@ -53,7 +53,7 @@ def test_iterate_sources_with_keychain():
     subsource1 = DictSource({'c': 2})
     subsource2 = DictSource({'o': 20})
 
-    sources = SourceIterator(source1, source2, keychain=['b'])
+    sources = SourceList(source1, source2, keychain=['b'])
 
     assert list(sources) == [subsource1, subsource2]
 
@@ -62,7 +62,7 @@ def test_add_source_after_instantiation():
     source1 = DictSource({'a': 1, 'b': {'c': 2}})
     source2 = DictSource({'m': 10, 'b': {'o': 20}})
 
-    sources = SourceIterator(source1)
+    sources = SourceList(source1)
     sources.append(source2)
 
     assert list(sources) == [source1, source2]
@@ -72,7 +72,7 @@ def test_remove_source_after_instantiation():
     source1 = DictSource({'a': 1, 'b': {'c': 2}})
     source2 = DictSource({'m': 10, 'b': {'o': 20}})
 
-    sources = SourceIterator(source1, source2)
+    sources = SourceList(source1, source2)
     sources.remove(source1)
 
     assert list(sources) == [source2]
@@ -87,7 +87,30 @@ def test_change_source_after_instantiation():
     source2 = DictSource({'m': 10, 'b': {'o': 20}})
     updated = DictSource({'x': 100, 'b': {'y': 200}})
 
-    sources = SourceIterator(source1, source2)
+    sources = SourceList(source1, source2)
     sources[0] = updated
 
     assert list(sources) == [updated, source2]
+
+
+def test_prevent_changes_to_source_of_subconfig():
+    source1 = DictSource({'a': 1, 'b': {'c': 2}})
+    source2 = DictSource({'m': 10, 'b': {'o': 20}})
+    updated = DictSource({'x': 100, 'b': {'y': 200}})
+
+    sources = SourceList(source1, source2, keychain=['b'])
+
+    with pytest.raises(TypeError) as exc_info:
+        sources.append(updated)
+
+    assert 'cannot be mutated' in str(exc_info)
+
+    with pytest.raises(TypeError) as exc_info:
+        sources.insert(0, updated)
+
+    assert 'cannot be mutated' in str(exc_info)
+
+    with pytest.raises(TypeError) as exc_info:
+        sources[0] = updated
+
+    assert 'cannot be mutated' in str(exc_info)

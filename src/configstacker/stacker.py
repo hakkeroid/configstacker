@@ -11,7 +11,7 @@ except ImportError:
     from collections import MutableSequence
 
 
-class SourceIterator(MutableSequence):
+class SourceList(MutableSequence):
 
     def __init__(self, *sources, **kwargs):
         self._validate_sources(sources)
@@ -28,7 +28,13 @@ class SourceIterator(MutableSequence):
         if kwargs:
             raise ValueError('Unknown parameters: %s' % kwargs)
 
+    def _check_mutability(self):
+        if self.keychain:
+            raise TypeError("The source list of a sublevel configuration"
+                            " cannot be mutated")
+
     def insert(self, pos, item):
+        self._check_mutability()
         self._validate_sources([item])
         self._sources.insert(pos, item)
 
@@ -59,7 +65,8 @@ class SourceIterator(MutableSequence):
     def _validate_sources(self, sources):
         for source in sources:
             if not isinstance(source, Source):
-                msg = "A source must be a subclass of 'configstacker.sources.Source' not '%s'"
+                msg = ("A source must be a subclass of"
+                       " 'configstacker.sources.Source' not '%s'")
                 raise ValueError(msg % source.__class__.__name__)
 
     def __len__(self):
@@ -69,6 +76,7 @@ class SourceIterator(MutableSequence):
         return self._sources[index]
 
     def __setitem__(self, index, value):
+        self._check_mutability()
         self._validate_sources([value])
         self._sources[index] = value
 
@@ -79,7 +87,7 @@ class SourceIterator(MutableSequence):
         return self._iter_sources()
 
     def __repr__(self):
-        return 'SourceIterator(%s)' % repr(self._sources)
+        return 'SourceList(%s)' % repr(self._sources)
 
 
 class StackedConfig(object):
@@ -96,13 +104,19 @@ class StackedConfig(object):
         # config to this (sub)config
         self._keychain = kwargs.pop('keychain', [])
 
-        self.source_list = SourceIterator(
+        # exposing the source list through an attribute and manipulating
+        # it directly contradicts with the law of demeter. However, in
+        # this case implementing the source list's interface would make
+        # the stacker's interface unneccessarily complex and adds more
+        # keywords that has to be escaped through dict access.
+        # https://en.wikipedia.org/wiki/Law_of_Demeter.
+        self.source_list = SourceList(
             *sources,
             keychain=self._keychain,
             reverse=kwargs.pop('reverse', True)
         )
 
-        # custom strategies that describes how to merge multiple
+        # custom strategies that describe how to merge multiple
         # values of the same key
         self._strategy_map = kwargs.pop('strategies', {})
 
@@ -128,26 +142,27 @@ class StackedConfig(object):
 
             for source in self.source_list:
                 for key, value in source.items():
-                    # identical keys from different sources that have
-                    # dicts as values needs to be merged
+                    # the same keys on different sources with dicts as
+                    # values needs to be merged
                     if isinstance(value, dict):
                         # higher prio sources might override keys with
                         # simple values that otherwise point to subsections
                         if key in yielded:
                             msg = ("The key '%s' from '%s' specifies a"
-                                   " subsection as value which conflicts"
-                                   " with a higher prioritized source"
-                                   " that wants the same value to be a"
-                                   " non-sectional instead")
+                                   " subsection as a value. However, this"
+                                   " conflicts with a higher prioritized"
+                                   " source which wants the same key to"
+                                   " be a normal value instead of a"
+                                   " subsection.")
                             raise ValueError(msg % (key, source._meta.source_name))
                         subqueues[key].appendleft(source.get_root())
                         continue
 
                     if key in subqueues:
                         msg = ("The key '%s' from '%s' specifies a"
-                               " non-sectional value which conflicts"
+                               " normal value. However, this conflicts"
                                " with a higher prioritized source"
-                               " that wants the same value to be a"
+                               " which wants the same key to be a"
                                " subsection instead.")
                         raise ValueError(msg % (key, source._meta.source_name))
 
