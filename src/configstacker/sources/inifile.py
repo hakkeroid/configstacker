@@ -7,6 +7,7 @@ except ImportError:
     import ConfigParser as configparser
 
 from . import base
+from .. import utils
 
 __all__ = ['INIFile']
 
@@ -19,7 +20,7 @@ class INIFile(base.Source):
     def __init__(self, source, subsection_token=None, **kwargs):
         super(INIFile, self).__init__(**kwargs)
         self._source = source
-        self._token = subsection_token
+        self.subsection_token = subsection_token
         self._parser = _parse_source(source)
 
     def _read(self):
@@ -27,13 +28,13 @@ class INIFile(base.Source):
         for section in self._parser.sections():
             if section == '__root__':
                 subsections = []
-            elif self._token and self._token in section:
-                subsections = section.split(self._token)
+            elif self.subsection_token and self.subsection_token in section:
+                subsections = section.split(self.subsection_token)
             else:
                 subsections = [section]
 
             items = self._parser.items(section)
-            subdict = _make_subdicts(data, subsections)
+            subdict = utils.make_subdicts(data, subsections)
             subdict.update(items)
 
         return data
@@ -55,7 +56,7 @@ class INIFile(base.Source):
                     if section is None:
                         name = key
                     else:
-                        name = self._token.join([section, key])
+                        name = self.subsection_token.join([section, key])
                     sections.append((name, value.items()))
                 else:
                     data_.setdefault(section or '__root__', []).append((key, value))
@@ -70,13 +71,6 @@ class INIFile(base.Source):
 
         with open(self._source, 'w') as fh:
             self._parser.write(fh)
-
-
-def _make_subdicts(base, subkeys):
-    while subkeys:
-        subsection = subkeys.pop(0)
-        base = base.setdefault(subsection, {})
-    return base
 
 
 def _parse_source(source):

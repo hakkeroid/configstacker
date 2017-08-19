@@ -2,7 +2,10 @@
 
 import os
 
+import six
+
 from . import base
+from .. import utils
 
 __all__ = ['Environment']
 
@@ -14,34 +17,35 @@ class Environment(base.Source):
 
     def __init__(self, prefix=None, subsection_token='_', **kwargs):
         super(Environment, self).__init__(**kwargs)
-        self.prefix = prefix
+        self._prefix = prefix
         self.subsection_token = subsection_token
 
     def _read(self):
         data = {}
-        for key, value in os.environ.items():
-            if not key.startswith(self.prefix):
-                continue
-
-            subheaders = key.lower().split(self.subsection_token)[1:]
-            subdata = data
-            last = subheaders.pop()
-            for header in subheaders:
-                subdata = subdata.setdefault(header, {})
-            subdata[last] = value
+        for env_key, value in _iter_environ(self._prefix):
+            tokens = env_key.lower().split(self.subsection_token)
+            keychain = tokens[1:-1]
+            key = tokens[-1]
+            subdict = utils.make_subdicts(data, keychain)
+            subdict[key] = value
 
         return data
 
     def _write(self, data):
-        def _write(section, keychain=None):
-            if keychain is None:
-                keychain = []
-
-            for key, value in section.items():
+        def _write(section, keychain):
+            for key, value in six.iteritems(section):
+                next_keychain = keychain + [key]
                 if isinstance(value, dict):
-                    _write(value, keychain + [key])
+                    _write(value, next_keychain)
                 else:
-                    full_key = '_'.join(keychain + [key]).upper()
-                    os.environ[self.prefix + full_key] = str(value)
+                    full_key = self.subsection_token.join(next_keychain)
+                    os.environ[full_key.upper()] = str(value)
 
-        _write(data)
+        _write(data, [self._prefix])
+
+
+def _iter_environ(prefix):
+    prefix_ = prefix.lower()
+    for key, value in six.iteritems(os.environ):
+        if key.lower().startswith(prefix_):
+            yield key, value
