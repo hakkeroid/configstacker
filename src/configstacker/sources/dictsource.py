@@ -4,6 +4,8 @@ import copy
 
 from . import base
 
+__all__ = ['DictSource']
+
 
 class DictSource(base.Source):
     """Simple memory key-value source"""

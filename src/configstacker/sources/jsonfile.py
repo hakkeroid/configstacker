@@ -4,6 +4,8 @@ import json
 
 from . import base
 
+__all__ = ['JSONFile']
+
 
 class JSONFile(base.Source):
     """Source for json files"""

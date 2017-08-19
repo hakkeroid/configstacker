@@ -7,6 +7,8 @@ except ImportError:
 
 from . import base
 
+__all__ = ['YAMLFile']
+
 
 class YAMLFile(base.Source):
     """Source for yaml files"""

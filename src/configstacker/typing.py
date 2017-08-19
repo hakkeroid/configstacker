@@ -2,11 +2,10 @@
 
 from collections import namedtuple
 
+__all__ = ['CustomType', 'convert_value_to_type']
+
+
 CustomType = namedtuple('CustomType', 'customize reset')
-
-
-def get_type_info(value):
-    return type(value)
 
 
 def convert_value_to_type(value, type_info):

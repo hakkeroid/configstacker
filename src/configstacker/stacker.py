@@ -2,13 +2,14 @@
 
 from collections import defaultdict, deque
 
-from . import types
-from .sources import DictSource, Source
+from . import typing, sources as sources_mod
 
 try:
     from collections.abc import MutableSequence
 except ImportError:
     from collections import MutableSequence
+
+__all__ = ['StackedConfig']
 
 
 class SourceList(MutableSequence):
@@ -64,7 +65,7 @@ class SourceList(MutableSequence):
 
     def _validate_sources(self, sources):
         for source in sources:
-            if not isinstance(source, Source):
+            if not isinstance(source, sources_mod.Source):
                 msg = ("A source must be a subclass of"
                        " 'configstacker.sources.Source' not '%s'")
                 raise ValueError(msg % source.__class__.__name__)
@@ -98,7 +99,7 @@ class StackedConfig(object):
 
     def __init__(self, *sources, **kwargs):
         if not sources:
-            sources = [DictSource()]
+            sources = [sources_mod.DictSource()]
 
         # _keychain is a list of keys that led from the root
         # config to this (sub)config
@@ -217,8 +218,8 @@ class StackedConfig(object):
             except KeyError:
                 continue
 
-            type_info = types.get_type_info(typed_value)
-            return types.convert_value_to_type(value, type_info)
+            type_info = type(typed_value)
+            return typing.convert_value_to_type(value, type_info)
         return value
 
     def _make_subconfig(self, sources, key):
@@ -244,7 +245,7 @@ class StackedConfig(object):
             except KeyError:
                 continue
 
-            if isinstance(value, Source):
+            if isinstance(value, sources_mod.Source):
                 subqueue.appendleft(source.get_root())
                 continue
 

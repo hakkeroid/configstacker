@@ -3,7 +3,7 @@
 import pytest
 
 from configstacker.sources import DictSource, Source
-from configstacker.types import CustomType
+from configstacker.typing import CustomType
 
 
 def test_enforce_read_method():

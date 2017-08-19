@@ -8,6 +8,8 @@ except ImportError:
 
 from . import base
 
+__all__ = ['INIFile']
+
 
 class INIFile(base.Source):
     """Source for ini files"""

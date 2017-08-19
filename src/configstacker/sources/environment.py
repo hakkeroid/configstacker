@@ -4,6 +4,8 @@ import os
 
 from . import base
 
+__all__ = ['Environment']
+
 
 class Environment(base.Source):
     """Reads environment variables"""

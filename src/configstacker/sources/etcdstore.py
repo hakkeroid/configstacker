@@ -13,6 +13,8 @@ except ImportError:
 
 from . import base
 
+__all__ = ['EtcdStore']
+
 
 class EtcdStore(base.Source):
     """Source for etcd stores"""

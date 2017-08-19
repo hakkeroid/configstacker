@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple
+import collections
 
 import six
 
-MetaInfo = namedtuple('MetaInfo', 'readonly is_typed source_name')
+__all__ = ['Source']
+
+MetaInfo = collections.namedtuple('MetaInfo', 'readonly is_typed source_name')
 
 
 class SourceMeta(type):
