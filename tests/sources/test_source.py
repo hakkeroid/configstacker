@@ -193,6 +193,12 @@ def test_read_cached_dict_source():
     assert config.b.c == 2
     assert config.b.d == {'e': 3}
 
+    config.clear_cache()
+
+    assert config.a == 10
+    assert config.b.c == 20
+    assert config.b.d == {'e': 30}
+
 
 def test_write_cached_dict_source():
     config = DictSource({}, cached=True)

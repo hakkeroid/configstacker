@@ -232,6 +232,9 @@ class CacheMixin(AbstractSource):
         except NotImplementedError:
             self._parent.write_cache()
 
+    def clear_cache(self):
+        self._cache = None
+
     def _get_data(self):
         if self._use_cache and self._cache:
             return self._cache
