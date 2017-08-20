@@ -4,7 +4,10 @@ import collections
 
 import six
 
+from .. import typing
+
 __all__ = ['Source']
+
 
 MetaInfo = collections.namedtuple('MetaInfo', 'readonly is_typed source_name')
 
@@ -252,24 +255,24 @@ class CustomTypeMixin(AbstractSource):
     def __init__(self, *args, **kwargs):
         # will be applied to child classes as sublevel sources
         # do not need caching.
-        self._custom_types = kwargs.get('type_map', {})
+        self._custom_types = typing.make_type_map(kwargs.get('type_map', {}))
 
         super(CustomTypeMixin, self).__init__(*args, **kwargs)
 
-    def dump(self, with_custom_types=False):
+    def dump(self, typed=False):
         dumped = super(CustomTypeMixin, self).dump()
 
-        if with_custom_types is False:
+        if typed is False:
             return dumped
 
-        def iter_dict(data):
+        def convert_dict(data):
             for key, value in data.items():
                 if isinstance(value, dict):
-                    yield key, dict(iter_dict(value))
+                    yield key, dict(convert_dict(value))
                 else:
                     yield key, self._to_custom_type(key, value)
 
-        return dict(iter_dict(dumped))
+        return dict(convert_dict(dumped))
 
     def _to_custom_type(self, key, value):
         converter = self._custom_types.get(key)

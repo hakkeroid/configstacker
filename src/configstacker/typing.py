@@ -2,10 +2,12 @@
 
 from collections import namedtuple
 
+import six
+
 __all__ = ['CustomType', 'convert_value_to_type']
 
 
-CustomType = namedtuple('CustomType', 'customize reset')
+CustomType = namedtuple('CustomType', 'key customize reset')
 
 
 def convert_value_to_type(value, type_info):
@@ -29,3 +31,7 @@ def convert_value_to_type(value, type_info):
             return value
     else:
         return type_info(value)
+
+
+def make_type_map(mapping):
+    return dict((k, CustomType(k, *v)) for k, v in six.iteritems(mapping))
