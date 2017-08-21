@@ -102,6 +102,22 @@ def test_source_items():
     assert items == [('b', 1)]
 
 
+def test_source_keys():
+    data = {'a': {'b': 1}}
+    config = DictSource(data)
+
+    items = [i for i in config.a.keys()]
+    assert items == ['b']
+
+
+def test_source_values():
+    data = {'a': {'b': 1}}
+    config = DictSource(data)
+
+    items = [i for i in config.a.values()]
+    assert items == [1]
+
+
 def test_source_setdefault():
     config = DictSource({'a': 1})
 

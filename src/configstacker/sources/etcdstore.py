@@ -51,11 +51,7 @@ class EtcdStore(base.Source):
                 yield '/' + '/'.join(key_parts), value
 
     def _get_payload_from_response(self, response):
-        try:
-            return response['node']['nodes']
-        except KeyError:
-            return {}
-        return self._convert_payload(payload, root=path)
+        return response['node'].get('nodes', {})
 
     def _translate_payload_to_dict(self, nodes, root=None):
         root = root or '/'

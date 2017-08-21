@@ -88,11 +88,11 @@ class AbstractSource(object):
     def items(self):
         return sorted(six.iteritems(self._get_data()))
 
-    def values(self):
-        return sorted(six.iterkeys(self._get_data()))
-
     def keys(self):
         return sorted(six.iterkeys(self._get_data()))
+
+    def values(self):
+        return sorted(six.itervalues(self._get_data()))
 
     def update(self, *others):
         self._check_writable()
@@ -241,8 +241,6 @@ class CacheMixin(AbstractSource):
 
         self._cache = super(CacheMixin, self)._get_data()
         return self._cache
-
-        return super(CacheMixin, self)._get_data()
 
     def _set_data(self, data):
         self._check_writable()
