@@ -6,6 +6,7 @@ Welcome to configstacker's documentation
    :caption: Contents:
 
    introduction
+   quickstart
    license
    version
    CHANGELOG
