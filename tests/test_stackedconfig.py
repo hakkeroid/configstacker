@@ -238,7 +238,7 @@ def test_source_items_with_strategies_and_untyped_source(monkeypatch):
         DictSource({'a': 1, 'x': [5, 6], 'b': {'c': 2, 'd': [3, 4]}}),
         DictSource({'a': 10, 'x': [50, 60], 'b': {'c': 20, 'd': [30, 40]}}),
         INIFile(untyped_source),
-        strategies={
+        strategy_map={
             'a': strategies.add,
             'x': strategies.collect,  # keep lists intact
             'c': strategies.collect,  # collect values into list
@@ -405,7 +405,7 @@ def test_read_stacked_sources_with_strategies():
     config = StackedConfig(
         DictSource({'a': 1, 'x': [5, 6], 'b': {'c': 2, 'd': [3, 4]}}),
         DictSource({'a': 10, 'x': [50, 60], 'b': {'c': 20, 'd': [30, 40]}}),
-        strategies={
+        strategy_map={
             'a': strategies.add,
             'x': strategies.collect,  # keep lists intact
             'c': strategies.collect,  # collect values into list
@@ -431,7 +431,7 @@ def test_read_stacked_sources_with_strategies_and_untyped_sources(monkeypatch):
         DictSource({'a': 1, 'x': [5, 6], 'b': {'c': 2, 'd': [3, 4]}}),
         DictSource({'a': 10, 'x': [50, 60], 'b': {'c': 20, 'd': [30, 40]}}),
         INIFile(untyped_source),
-        strategies= {
+        strategy_map= {
             'a': strategies.add,
             'x': strategies.collect,  # keep lists intact
             'c': strategies.collect,  # collect values into list
@@ -445,16 +445,16 @@ def test_read_stacked_sources_with_strategies_and_untyped_sources(monkeypatch):
     assert config.b.d == [30, 40, 3, 4]
 
 
-@pytest.mark.parametrize('strategy, result', [
+@pytest.mark.parametrize('name, result', [
     ('collect', [None, None]),
     ('add', None),
 ])
-def test_read_stacked_sources_with_strategies_for_none_values(strategy, result):
+def test_read_stacked_sources_with_strategies_for_none_values(name, result):
     config = StackedConfig(
         DictSource({'a': None}),
         DictSource({'a': None}),
-        strategies={
-            'a': getattr(strategies, strategy),
+        strategy_map={
+            'a': getattr(strategies, name),
         }
     )
 

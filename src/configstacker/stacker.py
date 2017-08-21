@@ -119,7 +119,7 @@ class StackedConfig(object):
 
         # custom strategies that describe how to merge multiple
         # values of the same key
-        self._strategy_map = kwargs.pop('strategies', {})
+        self._strategy_map = kwargs.pop('strategy_map', {})
 
         # inform user about unknown parameters
         if kwargs:
@@ -225,7 +225,7 @@ class StackedConfig(object):
     def _make_subconfig(self, sources, key):
         return StackedConfig(*sources,
                              keychain=self._keychain+[key],
-                             strategies=self._strategy_map
+                             strategy_map=self._strategy_map
                              )
 
     def __getattr__(self, key):
