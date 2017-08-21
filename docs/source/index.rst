@@ -7,6 +7,7 @@ Welcome to configstacker's documentation
 
    introduction
    quickstart
+   advanced
    license
    version
    CHANGELOG
