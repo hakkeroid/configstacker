@@ -79,21 +79,20 @@ def test_read_complex_stacked_sources(monkeypatch):
     )
 
     assert config.a == 100
-    assert config.x == 'x'       # changes int to str
+    assert config.x == 'x'       # changed int to str
     assert config.b.c == 2
-    assert config.b.y == 0.7     # changes int to float
-    assert config.b.d == 800     # changes subsource (dict) to single value
+    assert config.b.y == 0.7     # changed int to float
+    assert config.b.d == 800     # changed subsection (dict) to single value
     assert config.b.e == 400     # 'e' should not be shadowed by other 'e'
     assert config.b.m.e == 4000  # shadowed by untyped but casted to type
 
+    with pytest.raises(KeyError) as exc_info:
+        config.b.x
+
+    # config.b.d.e overrides a dict with a value
     with pytest.raises(AttributeError) as exc_info:
         config.b.d.e
     assert "no attribute 'e'" in str(exc_info.value)
-
-    # config.b.d overrides a dict with a value
-    with pytest.raises(ValueError) as exc_info:
-        config.b.dump()
-    assert "conflicts" in str(exc_info.value)
 
 
 def test_stacked_len():
@@ -164,6 +163,44 @@ def test_write_stacked_source_fails(key, message):
     assert message in str(exc_info.value)
 
 
+def test_get_root():
+    config = StackedConfig(
+        DictSource({'x': 6, 'b': {'y': 7, 'd': {'e': 8}}})
+    )
+
+    assert config.b.d.get_root() == config
+
+
+@pytest.mark.parametrize('readonly', (True, False))
+def test_is_writable(readonly):
+    config = StackedConfig(
+        DictSource(readonly=readonly)
+    )
+
+    assert config.is_writable() is not readonly
+
+
+def test_is_writable_in_low_priority_source():
+    config = StackedConfig(
+        DictSource(),
+        DictSource(readonly=True)
+    )
+
+    assert config.is_writable() is True
+
+
+@pytest.mark.parametrize('source, typed', [
+    (DictSource(), True),
+    (Environment('MYAPP'), False),
+])
+def test_is_typed(source, typed):
+    config = StackedConfig(
+        source
+    )
+
+    assert config.is_typed() is typed
+
+
 def test_stacked_get():
     config = StackedConfig(
         DictSource({'a': 1, 'b': {'c': 2}}),
@@ -179,11 +216,31 @@ def test_stacked_get():
     assert 'nonexisting' not in config
 
 
+def test_source_keys():
+    config = StackedConfig(
+        DictSource({'a': 1, 'b': {'c': 2}}),
+        DictSource({'x': 6, 'b': {'y': 7, 'd': {'e': 8}}})
+    )
+
+    keys = list(config.b.keys())
+    assert keys == ['c', 'd', 'y']
+
+
+def test_source_values():
+    config = StackedConfig(
+        DictSource({'a': 1, 'b': {'c': 2}}),
+        DictSource({'x': 6, 'b': {'y': 7, 'd': {'e': 8}}})
+    )
+
+    values = list(config.b.values())
+    assert values == [2, config.b.d, 7]
+
+
 def test_source_items(monkeypatch):
     monkeypatch.setenv('MVP_A', 10)
     config = StackedConfig(
         DictSource({'a': 1, 'b': {'c': 2}}),
-        Environment('MVP_'),
+        Environment('MVP'),
         DictSource({'x': 6, 'b': {'y': 7}})
     )
 
@@ -212,6 +269,7 @@ def test_reverse_source_order(reverse, values):
     assert config.b.c == values[1]
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('reverse', (True, False))
 def test_source_items_prevent_shadowing_between_subsections_and_values(reverse):
     sources = [
@@ -234,7 +292,7 @@ def test_source_items_with_strategies_and_untyped_source(monkeypatch):
     """))
 
     config = StackedConfig(
-        Environment('MVP_'),  # last source still needs a typed source
+        Environment('MVP'),  # last source still needs a typed source
         DictSource({'a': 1, 'x': [5, 6], 'b': {'c': 2, 'd': [3, 4]}}),
         DictSource({'a': 10, 'x': [50, 60], 'b': {'c': 20, 'd': [30, 40]}}),
         INIFile(untyped_source),
@@ -391,14 +449,29 @@ def test_stacked_config_with_type_conversions():
     assert config.c == 5+6j
     assert config.d == 'some other string'
     assert config.e == u'some other unicode'
-    assert config.f == False
-    assert config.g == True
+    assert config.f is False
+    assert config.g is True
     assert config.h == "yes"
     # the individual values cannot be converted
     # as we do not know their intended type
     assert config.i == ['3', '4']
     assert config.j == ('3', '4')
     assert config.k == set(['3', '4'])
+
+
+def test_stacked_config_with_untyped_source_and_custom_types():
+    typed = DictSource({'a': 1})
+    untyped = INIFile(io.StringIO(pytest.helpers.unindent(u"""
+        [__root__]
+        a=11
+    """)))
+    type_map = {
+        'a': (lambda v: v*2, lambda v: v/2),
+    }
+
+    config = StackedConfig(typed, untyped, type_map=type_map)
+
+    assert config.a == 22
 
 
 def test_read_stacked_sources_with_strategies():
@@ -427,11 +500,11 @@ def test_read_stacked_sources_with_strategies_and_untyped_sources(monkeypatch):
     """))
 
     config = StackedConfig(
-        Environment('MVP_'),  # last source still needs a typed source
+        Environment('MVP'),  # last source still needs a typed source
         DictSource({'a': 1, 'x': [5, 6], 'b': {'c': 2, 'd': [3, 4]}}),
         DictSource({'a': 10, 'x': [50, 60], 'b': {'c': 20, 'd': [30, 40]}}),
         INIFile(untyped_source),
-        strategy_map= {
+        strategy_map={
             'a': strategies.add,
             'x': strategies.collect,  # keep lists intact
             'c': strategies.collect,  # collect values into list
@@ -459,7 +532,7 @@ def test_read_stacked_sources_with_strategies_for_none_values(name, result):
     )
 
     assert config.a == result
-    assert config.items() == [('a', result)]
+    assert list(config.items()) == [('a', result)]
 
 
 def test_expose_sources_for_manipulation():
@@ -478,3 +551,64 @@ def test_expose_sources_for_manipulation():
 
     config.source_list.insert(0, source3)
     assert config.dump() == {'a': 10, 'b': {'c': 20, 'y': 7}, 'x': 6}
+
+
+@pytest.fixture
+def mytype_config():
+    class MyType:
+        def __init__(self, c):
+            self.c = c
+
+    def load_mytype(config):
+        return MyType(config.c)
+
+    def unload_mytype(mytype):
+        return {'c': mytype.c}
+
+    data = {'a': {'b': {'c': 1}}}
+    types = {
+        'b': (load_mytype, unload_mytype)
+    }
+
+    config = StackedConfig(
+        DictSource(data),
+        DictSource(data),
+        type_map=types,
+    )
+
+    return MyType, data, config
+
+
+def test_read_source_with_complex_custom_type(mytype_config):
+    MyType, data, config = mytype_config
+
+    mytype = MyType(1)
+
+    assert isinstance(config, StackedConfig)
+    assert isinstance(config.a.b, MyType)
+
+    assert config.a.b.c == mytype.c
+
+    dumped = config.dump()
+
+    assert dumped['a']['b'].c == mytype.c
+    assert isinstance(dumped['a']['b'], MyType)
+
+
+def test_write_source_with_complex_custom_type(mytype_config):
+    MyType, data, config = mytype_config
+
+    mytype = MyType(10)
+    data['a']['b']['c'] = 10
+
+    config.a.b = mytype
+
+    assert isinstance(config, StackedConfig)
+    assert isinstance(config.a.b, MyType)
+
+    assert config.a.b.c == mytype.c
+
+    dumped = config.dump()
+
+    assert dumped['a']['b'].c == mytype.c
+    assert isinstance(dumped['a']['b'], MyType)

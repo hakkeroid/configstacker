@@ -34,4 +34,12 @@ def convert_value_to_type(value, type_info):
 
 
 def make_type_map(mapping):
-    return dict((k, CustomType(k, *v)) for k, v in six.iteritems(mapping))
+    def convert_to_type(mapping):
+        for key, values in six.iteritems(mapping):
+            try:
+                yield key, CustomType(key, *values)
+            except TypeError:
+                # Is already a CustomType.
+                yield key, values
+
+    return dict(convert_to_type(mapping))

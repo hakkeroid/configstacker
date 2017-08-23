@@ -72,6 +72,12 @@ class AbstractSource(object):
     def is_writable(self):
         return not self._meta.readonly
 
+    def is_typed(self):
+        return self._meta.is_typed
+
+    def dump(self):
+        return self._get_data()
+
     def get(self, name, default=None):
         try:
             return self[name]
@@ -85,14 +91,16 @@ class AbstractSource(object):
             self[name] = value
             return self[name]
 
-    def items(self):
-        return sorted(six.iteritems(self._get_data()))
-
     def keys(self):
         return sorted(six.iterkeys(self._get_data()))
 
     def values(self):
-        return sorted(six.itervalues(self._get_data()))
+        for key in self.keys():
+            yield self[key]
+
+    def items(self):
+        for key in self.keys():
+            yield key, self[key]
 
     def update(self, *others):
         self._check_writable()
@@ -104,12 +112,6 @@ class AbstractSource(object):
             else:
                 data.update(other)
         self._set_data(data)
-
-    def dump(self):
-        return self._get_data()
-
-    def is_typed(self):
-        return self._meta.is_typed
 
     def _read(self):
         raise NotImplementedError
@@ -260,18 +262,17 @@ class CustomTypeMixin(AbstractSource):
 
         super(CustomTypeMixin, self).__init__(*args, **kwargs)
 
-    def dump(self, typed=False):
+    def dump(self):
         dumped = super(CustomTypeMixin, self).dump()
-
-        if typed is False:
-            return dumped
 
         def convert_dict(data):
             for key, value in data.items():
-                if isinstance(value, dict):
-                    yield key, dict(convert_dict(value))
+                typed = self[key]
+
+                if isinstance(typed, Source):
+                    yield key, typed.dump()
                 else:
-                    yield key, self._to_custom_type(key, value)
+                    yield key, typed
 
         return dict(convert_dict(dumped))
 
@@ -285,9 +286,6 @@ class CustomTypeMixin(AbstractSource):
 
     def __getitem__(self, key):
         attr = super(CustomTypeMixin, self).__getitem__(key)
-        if isinstance(attr, Source):
-            return attr
-
         return self._to_custom_type(key, attr)
 
     def __setitem__(self, key, value):

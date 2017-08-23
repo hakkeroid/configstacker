@@ -3,7 +3,6 @@
 import pytest
 
 from configstacker.sources import DictSource, Source
-from configstacker.typing import CustomType
 
 
 def test_enforce_read_method():
@@ -102,6 +101,17 @@ def test_source_items():
     assert items == [('b', 1)]
 
 
+def test_source_items_with_custom_types():
+    data = {'a': {'b': 1}}
+    types = {
+        'b': (lambda v: 2*v, lambda v: v/2)
+    }
+    config = DictSource(data, type_map=types)
+
+    items = [i for i in config.a.items()]
+    assert items == [('b', 2)]
+
+
 def test_source_keys():
     data = {'a': {'b': 1}}
     config = DictSource(data)
@@ -116,6 +126,17 @@ def test_source_values():
 
     items = [i for i in config.a.values()]
     assert items == [1]
+
+
+def test_source_values_with_custom_types():
+    data = {'a': {'b': 1}}
+    types = {
+        'b': (lambda v: 2*v, lambda v: v/2)
+    }
+    config = DictSource(data, type_map=types)
+
+    items = [i for i in config.a.values()]
+    assert items == [2]
 
 
 def test_source_setdefault():
@@ -174,8 +195,7 @@ def test_read_source_with_custom_types():
     assert config.a == '1'
     assert config.b.c == 4
 
-    assert config.dump() == data
-    assert config.dump(typed=True) == {'a': '1', 'b': {'c': 4}}
+    assert config.dump() == {'a': '1', 'b': {'c': 4}}
 
 
 def test_write_source_with_custom_types():
@@ -190,6 +210,58 @@ def test_write_source_with_custom_types():
     config.b.c = 4
 
     assert config._data == data
+
+
+@pytest.fixture
+def mytype_config():
+    class MyType:
+        def __init__(self, b):
+            self.b = b
+
+    def load_mytype(config):
+        return MyType(config.b)
+
+    def unload_mytype(mytype):
+        return {'b': mytype.b}
+
+    data = {'a': {'b': 1}}
+    types = {
+        'a': (load_mytype, unload_mytype)
+    }
+
+    return MyType, data, DictSource(data, type_map=types)
+
+
+def test_read_source_with_complex_custom_type(mytype_config):
+    MyType, data, config = mytype_config
+
+    mytype = MyType(1)
+
+    assert isinstance(config, DictSource)
+    assert isinstance(config.a, MyType)
+
+    assert config.a.b == mytype.b
+
+    dumped = config.dump()
+
+    assert dumped['a'].b == mytype.b
+    assert isinstance(dumped['a'], MyType)
+
+
+def test_write_source_with_complex_custom_type(mytype_config):
+    MyType, data, config = mytype_config
+
+    mytype = MyType(10)
+    data['a']['b'] = 10
+
+    config.a = mytype
+
+    assert config.a.b == mytype.b
+
+    dumped = config.dump()
+
+    assert dumped['a'].b == mytype.b
+    assert isinstance(dumped['a'], MyType)
 
 
 def test_read_cached_dict_source():

@@ -46,6 +46,13 @@ class SourceList(MutableSequence):
         for source in self._iter_sources(filter_by_type):
             yield source
 
+    def writable(self):
+        def filter_by_writability(source):
+            return source.is_writable()
+
+        for source in self._iter_sources(filter_by_writability):
+            yield source
+
     def _iter_sources(self, filter_fn=None):
         if not filter_fn:
             def filter_fn(s):
@@ -101,6 +108,10 @@ class StackedConfig(object):
         if not sources:
             sources = [sources_mod.DictSource()]
 
+        # _parent is the parent object
+        # _parent_key is the key on the parent that led to this object
+        self._parent, self._parent_key = kwargs.pop('parent', (None, None))
+
         # _keychain is a list of keys that led from the root
         # config to this (sub)config
         self._keychain = kwargs.pop('keychain', [])
@@ -120,6 +131,7 @@ class StackedConfig(object):
         # custom strategies that describe how to merge multiple
         # values of the same key
         self._strategy_map = kwargs.pop('strategy_map', {})
+        self._custom_types = typing.make_type_map(kwargs.pop('type_map', {}))
 
         # inform user about unknown parameters
         if kwargs:
@@ -128,78 +140,27 @@ class StackedConfig(object):
         # activate setattr
         self._initialized = True
 
-    def get(self, name, default=None):
+    def get_root(self):
         try:
-            return self[name]
-        except KeyError:
-            return default
+            return self._parent.get_root()
+        except AttributeError:
+            return self
 
-    def items(self):
-        def _items():
-            subqueues = defaultdict(deque)
-
-            yielded = set()
-            results = {}
-
-            for source in self.source_list:
-                for key, value in source.items():
-                    # the same keys on different sources with dicts as
-                    # values needs to be merged
-                    if isinstance(value, dict):
-                        # higher prio sources might override keys with
-                        # simple values that otherwise point to subsections
-                        if key in yielded:
-                            msg = ("The key '%s' from '%s' specifies a"
-                                   " subsection as a value. However, this"
-                                   " conflicts with a higher prioritized"
-                                   " source which wants the same key to"
-                                   " be a normal value instead of a"
-                                   " subsection.")
-                            raise ValueError(msg % (key, source._meta.source_name))
-                        subqueues[key].appendleft(source.get_root())
-                        continue
-
-                    if key in subqueues:
-                        msg = ("The key '%s' from '%s' specifies a"
-                               " normal value. However, this conflicts"
-                               " with a higher prioritized source"
-                               " which wants the same key to be a"
-                               " subsection instead.")
-                        raise ValueError(msg % (key, source._meta.source_name))
-
-                    if not source.is_typed():
-                        value = self._get_typed_value(key, value)
-
-                    # all other identical keys will shadow
-                    # subsequent keys
-                    if key in self._strategy_map:
-                        strategy = self._strategy_map[key]
-                        results[key] = strategy(results.get(key), value)
-                    elif key in yielded:
-                        continue
-                    else:
-                        yield key, value
-                        yielded.add(key)
-
-            for key, value in results.items():
-                yield key, value
-
-            for key, subqueue in subqueues.items():
-                yield key, self._make_subconfig(subqueue, key)
-
-        return sorted(_items())
-
-    def setdefault(self, name, value):
+    def is_writable(self):
         try:
-            return self[name]
-        except KeyError:
-            self[name] = value
-            return value
+            next(self.source_list.writable())
+        except StopIteration:
+            return False
+        else:
+            return True
 
-    def update(self, *others):
-        for other in others:
-            for key, value in other.items():
-                self[key] = value
+    def is_typed(self):
+        try:
+            next(self.source_list.typed())
+        except StopIteration:
+            return False
+        else:
+            return True
 
     def dump(self):
         def _dump(obj):
@@ -210,6 +171,44 @@ class StackedConfig(object):
                     yield key, value
 
         return dict(_dump(self))
+
+    def get(self, name, default=None):
+        try:
+            return self[name]
+        except KeyError:
+            return default
+
+    def setdefault(self, name, value):
+        try:
+            return self[name]
+        except KeyError:
+            self[name] = value
+            return value
+
+    def keys(self):
+        def key_iterator():
+            yielded_keys = set()
+
+            for source in self.source_list:
+                for key in source:
+                    if key not in yielded_keys:
+                        yield key
+                        yielded_keys.add(key)
+
+        return sorted(key_iterator())
+
+    def values(self):
+        for key in self.keys():
+            yield self[key]
+
+    def items(self):
+        for key in self.keys():
+            yield key, self[key]
+
+    def update(self, *others):
+        for other in others:
+            for key, value in other.items():
+                self[key] = value
 
     def _get_typed_value(self, key, value):
         for source in self.source_list.typed():
@@ -224,8 +223,10 @@ class StackedConfig(object):
 
     def _make_subconfig(self, sources, key):
         return StackedConfig(*sources,
+                             parent=(self, key),
                              keychain=self._keychain+[key],
-                             strategy_map=self._strategy_map
+                             strategy_map=self._strategy_map,
+                             type_map=self._custom_types
                              )
 
     def __getattr__(self, key):
@@ -237,6 +238,7 @@ class StackedConfig(object):
         subqueue = deque()
 
         strategy = self._strategy_map.get(key)
+        converter = self._custom_types.get(key)
         result = None
 
         for source in self.source_list:
@@ -245,11 +247,17 @@ class StackedConfig(object):
             except KeyError:
                 continue
 
+            if converter:
+                if not source.is_typed():
+                    value = self._get_typed_value(key, value)
+
+                value = converter.customize(value)
+
             if isinstance(value, sources_mod.Source):
                 subqueue.appendleft(source.get_root())
                 continue
 
-            if not source.is_typed():
+            if not converter and not source.is_typed():
                 value = self._get_typed_value(key, value)
 
             if strategy:
@@ -277,24 +285,18 @@ class StackedConfig(object):
             self[attr] = value
 
     def __setitem__(self, key, value):
-        # will be used if the key could not be found in any source
-        # which means that a new key/value shall be added to the
-        # config.
-        writable_source = None
-
         for source in self.source_list:
-            if writable_source is None and source.is_writable():
-                writable_source = source
-
             if key in source:
                 source[key] = value
                 return
 
         # no source was found so write it to first writable source
-        if writable_source is not None:
-            writable_source[key] = value
-        else:
+        try:
+            writable_source = next(self.source_list.writable())
+        except StopIteration:
             raise TypeError('No writable sources found')
+        else:
+            writable_source[key] = value
 
     def __eq__(self, other):
         return self.dump() == other.dump()
