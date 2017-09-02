@@ -2,9 +2,7 @@
 
 import pytest
 
-from configstacker.sources import EtcdStore
-# the etcdconnector needs to be imported directly
-# as it is not part of the public api
+from configstacker import EtcdStore
 from configstacker.sources.etcdstore import EtcdConnector
 
 try:

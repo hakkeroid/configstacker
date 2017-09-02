@@ -4,7 +4,7 @@ import io
 
 import pytest
 
-from configstacker.sources import INIFile
+from configstacker import INIFile
 
 
 @pytest.fixture

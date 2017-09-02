@@ -4,8 +4,8 @@ import io
 
 import pytest
 
-from configstacker import StackedConfig, strategies
-from configstacker.sources import DictSource, Environment, INIFile
+from configstacker import (DictSource, Environment, INIFile, StackedConfig,
+                           strategies)
 
 
 def test_use_dictsource_on_empty_stacked_config():

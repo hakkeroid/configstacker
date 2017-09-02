@@ -2,7 +2,7 @@
 
 import pytest
 
-from configstacker.sources import DictSource, Source
+from configstacker import DictSource, Source
 
 
 def test_enforce_read_method():

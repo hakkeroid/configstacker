@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from configstacker.sources import JSONFile
+from configstacker import JSONFile
 
 
 @pytest.fixture

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from .stacker import StackedConfig
-
 # make modules available on simple configstacker import
-from . import typing
-from . import strategies
+from . import strategies, typing, utils
+
+# make sources available on root package for convenience
+from .sources import (DictSource, Environment, EtcdStore, INIFile, JSONFile,
+                      Source, StackedConfig, YAMLFile)

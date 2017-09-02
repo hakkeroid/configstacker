@@ -2,7 +2,8 @@
 
 from collections import defaultdict, deque
 
-from . import typing, sources as sources_mod
+from .. import typing
+from . import base, dictsource
 
 try:
     from collections.abc import MutableSequence
@@ -72,7 +73,7 @@ class SourceList(MutableSequence):
 
     def _validate_sources(self, sources):
         for source in sources:
-            if not isinstance(source, sources_mod.Source):
+            if not isinstance(source, base.Source):
                 msg = ("A source must be a subclass of"
                        " 'configstacker.sources.Source' not '%s'")
                 raise ValueError(msg % source.__class__.__name__)
@@ -106,7 +107,7 @@ class StackedConfig(object):
 
     def __init__(self, *sources, **kwargs):
         if not sources:
-            sources = [sources_mod.DictSource()]
+            sources = [dictsource.DictSource()]
 
         # _parent is the parent object
         # _parent_key is the key on the parent that led to this object
@@ -253,7 +254,7 @@ class StackedConfig(object):
 
                 value = converter.customize(value)
 
-            if isinstance(value, sources_mod.Source):
+            if isinstance(value, base.Source):
                 subqueue.appendleft(source.get_root())
                 continue
 

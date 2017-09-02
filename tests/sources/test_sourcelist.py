@@ -2,8 +2,8 @@
 
 import pytest
 
-from configstacker.sources import DictSource
-from configstacker.stacker import SourceList
+from configstacker import DictSource
+from configstacker.sources.stacker import SourceList
 
 
 @pytest.fixture

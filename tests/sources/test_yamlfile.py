@@ -2,7 +2,7 @@
 
 import pytest
 
-from configstacker.sources import YAMLFile
+from configstacker import YAMLFile
 
 try:
     import yaml
