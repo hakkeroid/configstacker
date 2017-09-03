@@ -1,0 +1,7 @@
+{
+    "simple_int": 10,
+    "a_bool": false,
+    "nested": {
+        "a_float": 2.0
+    }
+}
