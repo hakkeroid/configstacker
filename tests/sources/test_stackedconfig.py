@@ -518,18 +518,16 @@ def test_read_stacked_sources_with_strategies_and_untyped_sources(monkeypatch):
     assert config.b.d == [30, 40, 3, 4]
 
 
-@pytest.mark.parametrize('name, result', [
-    ('collect', [None, None]),
-    ('add', None),
-])
-def test_read_stacked_sources_with_strategies_for_none_values(name, result):
+def test_read_stacked_sources_with_strategies_for_none_values():
     config = StackedConfig(
         DictSource({'a': None}),
         DictSource({'a': None}),
         strategy_map={
-            'a': getattr(strategies, name),
+            'a': strategies.collect,
         }
     )
+
+    result = [None, None]
 
     assert config.a == result
     assert list(config.items()) == [('a', result)]

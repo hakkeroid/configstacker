@@ -2,7 +2,7 @@
 
 from collections import defaultdict, deque
 
-from .. import typing
+from .. import typing, strategies
 from . import base, dictsource
 
 try:
@@ -240,7 +240,7 @@ class StackedConfig(object):
 
         strategy = self._strategy_map.get(key)
         converter = self._custom_types.get(key)
-        result = None
+        result = strategies.EMPTY
 
         for source in self.source_list:
             try:
