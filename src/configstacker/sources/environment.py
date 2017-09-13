@@ -15,17 +15,25 @@ class Environment(base.Source):
 
     _is_typed = False
 
-    def __init__(self, prefix=None, subsection_token='_', **kwargs):
+    def __init__(self, prefix, subsection_token='_', **kwargs):
         super(Environment, self).__init__(**kwargs)
         self._prefix = prefix
         self.subsection_token = subsection_token
 
     def _read(self):
         data = {}
-        for env_key, value in _iter_environ(self._prefix):
-            tokens = env_key.lower().split(self.subsection_token)
-            keychain = tokens[1:-1]
-            key = tokens[-1]
+        for keys, value in _iter_environ(self._prefix):
+            keychain = keys.lower().split(self.subsection_token)
+
+            # do not remove prefix when it is an empty string
+            # which is only used for accessing system environment
+            # variables.
+            if self._prefix:
+                keychain.pop(0)
+
+            # separate last key which is a leaf
+            key = keychain.pop()
+
             subdict = utils.make_subdicts(data, keychain)
             subdict[key] = value
 

@@ -16,6 +16,23 @@ def test_read_environment_source(monkeypatch):
     assert config.b.d == {'e': '3'}
 
 
+def test_read_environment_source_with_empty_prefix(monkeypatch):
+    monkeypatch.setenv('MVP_A', 1)
+    monkeypatch.setenv('MVP_B_C', 2)
+    monkeypatch.setenv('MVP_B_D_E', 3)
+    config = Environment('')
+
+    assert 'path' in config
+    assert 'pythonhashseed' in config
+
+    assert 'tox' in config.virtual.env
+    assert 'empty_prefix' in config.pytest.current.test
+
+    assert config.mvp.a == '1'
+    assert config.mvp.b.c == '2'
+    assert config.mvp.b.d == {'e': '3'}
+
+
 def test_write_environment_fails(monkeypatch):
     monkeypatch.setenv('MVP_A', 1)
     config = Environment(prefix='MVP', readonly=True)
