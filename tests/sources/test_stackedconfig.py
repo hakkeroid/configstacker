@@ -533,6 +533,21 @@ def test_read_stacked_sources_with_strategies_for_none_values():
     assert list(config.items()) == [('a', result)]
 
 
+def test_read_stacked_sources_with_joining_strategy():
+    source1 = DictSource({'path': '/path/to/default/file'})
+    source2 = DictSource({'path': '/path/to/user/file'})
+
+    config = StackedConfig(
+        source1,
+        source2,
+        strategy_map={
+            'path': strategies.make_join(separator=':')
+        }
+    )
+
+    assert config.path == '/path/to/user/file:/path/to/default/file'
+
+
 def test_expose_sources_for_manipulation():
     source1 = DictSource({'a': 1, 'b': {'c': 2}})
     source2 = DictSource({'a': 10, 'b': {'c': 20}})
