@@ -422,9 +422,10 @@ def test_stacked_config_with_type_conversions():
         'f': True,
         'g': False,
         'h': False,
-        'i': [1, 2],
-        'j': (1, 2),
-        'k': set([1, 2]),
+        'i': True,
+        'j': [1, 2],
+        'k': (1, 2),
+        'l': set([1, 2]),
     }
     untyped_source1 = io.StringIO(pytest.helpers.unindent(u"""
         [__root__]
@@ -436,9 +437,10 @@ def test_stacked_config_with_type_conversions():
         f=false
         g=True
         h=yes
-        i=3, 4
+        i=nope
         j=3, 4
         k=3, 4
+        l=3, 4
     """))
     typed1 = DictSource(typed_source1)
     untyped1 = INIFile(untyped_source1)
@@ -451,25 +453,26 @@ def test_stacked_config_with_type_conversions():
     assert config.e == u'some other unicode'
     assert config.f is False
     assert config.g is True
-    assert config.h == "yes"
+    assert config.h == True
+    assert config.i == "nope"
     # the individual values cannot be converted
     # as we do not know their intended type
-    assert config.i == ['3', '4']
-    assert config.j == ('3', '4')
-    assert config.k == set(['3', '4'])
+    assert config.j == ['3', '4']
+    assert config.k == ('3', '4')
+    assert config.l == set(['3', '4'])
 
 
-def test_stacked_config_with_untyped_source_and_custom_types():
+def test_stacked_config_with_untyped_source_and_custom_converters():
     typed = DictSource({'a': 1})
     untyped = INIFile(io.StringIO(pytest.helpers.unindent(u"""
         [__root__]
         a=11
     """)))
-    type_map = {
+    converter_map = {
         'a': (lambda v: v*2, lambda v: v/2),
     }
 
-    config = StackedConfig(typed, untyped, type_map=type_map)
+    config = StackedConfig(typed, untyped, converter_map=converter_map)
 
     assert config.a == 22
 
@@ -586,13 +589,13 @@ def mytype_config():
     config = StackedConfig(
         DictSource(data),
         DictSource(data),
-        type_map=types,
+        converter_map=types,
     )
 
     return MyType, data, config
 
 
-def test_read_source_with_complex_custom_type(mytype_config):
+def test_read_source_with_complex_custom_converters(mytype_config):
     MyType, data, config = mytype_config
 
     mytype = MyType(1)
@@ -608,7 +611,7 @@ def test_read_source_with_complex_custom_type(mytype_config):
     assert isinstance(dumped['a']['b'], MyType)
 
 
-def test_write_source_with_complex_custom_type(mytype_config):
+def test_write_source_with_complex_custom_converters(mytype_config):
     MyType, data, config = mytype_config
 
     mytype = MyType(10)

@@ -4,7 +4,7 @@ import collections
 
 import six
 
-from .. import typing
+from .. import converters
 
 __all__ = ['Source']
 
@@ -253,17 +253,19 @@ class CacheMixin(AbstractSource):
             return super(CacheMixin, self)._set_data(data)
 
 
-class CustomTypeMixin(AbstractSource):
+class CustomConverterMixin(AbstractSource):
 
     def __init__(self, *args, **kwargs):
         # will be applied to child classes as sublevel sources
         # do not need caching.
-        self._custom_types = typing.make_type_map(kwargs.get('type_map', {}))
+        self._converter_map = converters.make_converter_map(
+            kwargs.get('converter_map', {})
+        )
 
-        super(CustomTypeMixin, self).__init__(*args, **kwargs)
+        super(CustomConverterMixin, self).__init__(*args, **kwargs)
 
     def dump(self):
-        dumped = super(CustomTypeMixin, self).dump()
+        dumped = super(CustomConverterMixin, self).dump()
 
         def convert_dict(data):
             for key, value in data.items():
@@ -276,22 +278,22 @@ class CustomTypeMixin(AbstractSource):
 
         return dict(convert_dict(dumped))
 
-    def _to_custom_type(self, key, value):
-        converter = self._custom_types.get(key)
+    def _customize(self, key, value):
+        converter = self._converter_map.get(key)
         return converter.customize(value) if converter else value
 
-    def _to_original_type(self, key, value):
-        converter = self._custom_types[key]
+    def _reset(self, key, value):
+        converter = self._converter_map[key]
         return converter.reset(value) if converter else value
 
     def __getitem__(self, key):
-        attr = super(CustomTypeMixin, self).__getitem__(key)
-        return self._to_custom_type(key, attr)
+        attr = super(CustomConverterMixin, self).__getitem__(key)
+        return self._customize(key, attr)
 
     def __setitem__(self, key, value):
-        if key in self._custom_types:
-            value = self._to_original_type(key, value)
-        super(CustomTypeMixin, self).__setitem__(key, value)
+        if key in self._converter_map:
+            value = self._reset(key, value)
+        super(CustomConverterMixin, self).__setitem__(key, value)
 
 
 class DefaultValueMixin(AbstractSource):
@@ -314,7 +316,7 @@ class DefaultValueMixin(AbstractSource):
 
 class Source(CacheMixin,
              DefaultValueMixin,
-             CustomTypeMixin,
+             CustomConverterMixin,
              LockedSourceMixin,
              AbstractSource
              ):

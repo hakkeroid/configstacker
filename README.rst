@@ -18,7 +18,7 @@ and merging strategies for keys that occur in multiple sources.
     # order of sources defines search priority
     config = StackedConfig(
         YAMLFile('/path/to/my/config.yml'),
-        # untyped sources gets typing information from typed sources
+        # untyped sources gets type information from typed sources
         EtcdStore('https://my-etcd-host/'),
         Environment(prefix='MYAPP')
     )

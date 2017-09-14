@@ -101,12 +101,12 @@ def test_source_items():
     assert items == [('b', 1)]
 
 
-def test_source_items_with_custom_types():
+def test_source_items_with_converters():
     data = {'a': {'b': 1}}
-    types = {
+    converters = {
         'b': (lambda v: 2*v, lambda v: v/2)
     }
-    config = DictSource(data, type_map=types)
+    config = DictSource(data, converter_map=converters)
 
     items = [i for i in config.a.items()]
     assert items == [('b', 2)]
@@ -128,12 +128,12 @@ def test_source_values():
     assert items == [1]
 
 
-def test_source_values_with_custom_types():
+def test_source_values_with_converters():
     data = {'a': {'b': 1}}
-    types = {
+    converters = {
         'b': (lambda v: 2*v, lambda v: v/2)
     }
-    config = DictSource(data, type_map=types)
+    config = DictSource(data, converter_map=converters)
 
     items = [i for i in config.a.values()]
     assert items == [2]
@@ -184,13 +184,13 @@ def test_source_update(container):
     assert config == expected
 
 
-def test_read_source_with_custom_types():
+def test_read_source_with_converters():
     data = {'a': 1, 'b': {'c': 2}}
-    types = {
+    converters = {
         'a': (str, int),
         'c': (lambda v: 2*v, lambda v: v/2),
     }
-    config = DictSource(data, type_map=types)
+    config = DictSource(data, converter_map=converters)
 
     assert config.a == '1'
     assert config.b.c == 4
@@ -198,13 +198,13 @@ def test_read_source_with_custom_types():
     assert config.dump() == {'a': '1', 'b': {'c': 4}}
 
 
-def test_write_source_with_custom_types():
+def test_write_source_with_converters():
     data = {'a': 1, 'b': {'c': 2}}
-    types = {
+    converters = {
         'a': (str, int),
         'c': (lambda v: 2*v, lambda v: v/2)
     }
-    config = DictSource(data, type_map=types)
+    config = DictSource(data, converter_map=converters)
 
     config.a = '1'
     config.b.c = 4
@@ -225,14 +225,14 @@ def mytype_config():
         return {'b': mytype.b}
 
     data = {'a': {'b': 1}}
-    types = {
+    converters = {
         'a': (load_mytype, unload_mytype)
     }
 
-    return MyType, data, DictSource(data, type_map=types)
+    return MyType, data, DictSource(data, converter_map=converters)
 
 
-def test_read_source_with_complex_custom_type(mytype_config):
+def test_read_source_with_complex_converters(mytype_config):
     MyType, data, config = mytype_config
 
     mytype = MyType(1)
@@ -248,7 +248,7 @@ def test_read_source_with_complex_custom_type(mytype_config):
     assert isinstance(dumped['a'], MyType)
 
 
-def test_write_source_with_complex_custom_type(mytype_config):
+def test_write_source_with_complex_converters(mytype_config):
     MyType, data, config = mytype_config
 
     mytype = MyType(10)

@@ -52,6 +52,6 @@ def test_write_environment_source(monkeypatch):
     config.b.c = '20'
     config.b['d'].e = '30'
 
-    assert config.a == '10'  # looses typing information
+    assert config.a == '10'  # looses type information
     assert config.b.c == '20'
     assert config.b.d == {'e': '30'}

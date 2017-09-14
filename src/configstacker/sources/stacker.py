@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import distutils
+
 from collections import defaultdict, deque
 
-from .. import typing, strategies
+from .. import converters, strategies
 from . import base, dictsource
 
 try:
@@ -132,7 +134,11 @@ class StackedConfig(object):
         # custom strategies that describe how to merge multiple
         # values of the same key
         self._strategy_map = kwargs.pop('strategy_map', {})
-        self._custom_types = typing.make_type_map(kwargs.pop('type_map', {}))
+        # custom converters that define how to deal with individual
+        # values
+        self._converter_map = converters.make_converter_map(
+            kwargs.pop('converter_map', {})
+        )
 
         # inform user about unknown parameters
         if kwargs:
@@ -219,7 +225,7 @@ class StackedConfig(object):
                 continue
 
             type_info = type(typed_value)
-            return typing.convert_value_to_type(value, type_info)
+            return _convert_value_to_type(value, type_info)
         return value
 
     def _make_subconfig(self, sources, key):
@@ -227,7 +233,7 @@ class StackedConfig(object):
                              parent=(self, key),
                              keychain=self._keychain+[key],
                              strategy_map=self._strategy_map,
-                             type_map=self._custom_types
+                             converter_map=self._converter_map
                              )
 
     def __getattr__(self, key):
@@ -239,7 +245,7 @@ class StackedConfig(object):
         subqueue = deque()
 
         strategy = self._strategy_map.get(key)
-        converter = self._custom_types.get(key)
+        converter = self._converter_map.get(key)
         result = strategies.EMPTY
 
         for source in self.source_list:
@@ -318,3 +324,26 @@ class StackedConfig(object):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, repr(self.dump()))
+
+
+def _convert_value_to_type(value, type_info):
+    """Convert value by dispatching from type_info"""
+
+    if type_info is list:
+        return [token.strip() for token in value.split(',')]
+
+    elif type_info is tuple:
+        return tuple(token.strip() for token in value.split(','))
+
+    elif type_info is set:
+        return set([token.strip() for token in value.split(',')])
+
+    elif type_info is bool:
+        try:
+            return bool(distutils.util.strtobool(value))
+        except ValueError:
+            return value
+    else:
+        return type_info(value)
+
+
