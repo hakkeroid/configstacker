@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+
 import pytest
 
-from configstacker import DictSource, Source
+from configstacker import DictSource, Source, converters
 
 
 def test_enforce_read_method():
@@ -110,6 +112,34 @@ def test_source_items_with_converters():
 
     items = [i for i in config.a.items()]
     assert items == [('b', 2)]
+
+
+@pytest.mark.parametrize('converter,value,expected,reset', [
+    (converters.bools(), 'True', True, 'True'),
+    (converters.bools(), 'false', False, 'False'),
+    (converters.bools(), 'yes', True, 'True'),
+    (converters.bools(), 'No', False, 'False'),
+    (converters.bools(), '1', True, 'True'),
+    (converters.dates(), '2017-10-22',
+        datetime.date(2017, 10, 22), '2017-10-22'),
+    (converters.dates('%d.%m.%Y'), '22.10.2017',
+        datetime.date(2017, 10, 22), '22.10.2017'),
+    # use default strict format
+    (converters.datetimes(), '2017-10-22T10:00:20',
+        datetime.datetime(2017, 10, 22, 10, 0, 20), '2017-10-22T10:00:20'),
+    # use different format that allows empty values
+    (converters.datetimes('%Y-%m'), '2017-10',
+        datetime.datetime(2017, 10, 1, 0, 0, 0), '2017-10'),
+])
+def test_builtin_converters(converter, value, expected, reset):
+    data = {'a': value}
+    types = {
+        'a': converter,
+    }
+    config = DictSource(data, converter_map=types)
+
+    assert config.a == expected
+    assert config._reset('a', config.a) == reset
 
 
 def test_source_keys():
