@@ -56,10 +56,12 @@ def test_read_stacked_sources():
     )
 
     assert config.a == 1
+    assert config.x == 6
     assert config.b.c == 2
     assert config.b.y == 7
 
     assert config['a'] == 1
+    assert config['x'] == 6
     assert config['b'].c == 2
     assert config.b['y'] == 7
     assert config.b.d.e == 8
@@ -252,8 +254,8 @@ def test_source_items(monkeypatch):
 
 
 @pytest.mark.parametrize('reverse, values', [
-    (False, (1, 20)),
-    (True, (1000, 200)),
+    (False, (1000, 200)),
+    (True, (1, 20)),
 ])
 def test_reverse_source_order(reverse, values):
     sources = [

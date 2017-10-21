@@ -27,7 +27,8 @@ class SourceList(MutableSequence):
 
         # convenience functionality that allows to specify
         # the priority for traversing the sources
-        self.reverse = kwargs.pop('reverse', None)
+        if kwargs.pop('reverse', False):
+            self.reverse()
 
         if kwargs:
             raise ValueError('Unknown parameters: %s' % kwargs)
@@ -61,11 +62,9 @@ class SourceList(MutableSequence):
             def filter_fn(s):
                 return True
 
-        order = reversed if self.reverse else lambda x: x
-
         # return the sublevels of the sources according to the
         # keychain
-        for source in order(self._sources):
+        for source in reversed(self._sources):
             if filter_fn(source) is False:
                 continue
             traversed_source = source
@@ -128,7 +127,7 @@ class StackedConfig(object):
         self.source_list = SourceList(
             *sources,
             keychain=self._keychain,
-            reverse=kwargs.pop('reverse', True)
+            reverse=kwargs.pop('reverse', False)
         )
 
         # custom strategies that describe how to merge multiple
