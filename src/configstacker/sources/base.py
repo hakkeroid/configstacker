@@ -69,6 +69,8 @@ class AbstractSource(object):
         # the key on the parent that led to this object
         return self._keychain[-1] if self._keychain else None
 
+    # public api
+    # ==========
     def get_root(self):
         try:
             return self._parent.get_root()
@@ -84,6 +86,8 @@ class AbstractSource(object):
     def dump(self):
         return self._get_data()
 
+    # dict api
+    # ========
     def get(self, name, default=None):
         try:
             return self[name]
@@ -119,12 +123,44 @@ class AbstractSource(object):
                 data.update(other)
         self._set_data(data)
 
-    def _read(self):
-        raise NotImplementedError
+    def __getitem__(self, key):
+        attr = self._get_data()[key]
+        if isinstance(attr, dict):
+            return Source(parent=self,
+                          keychain=self._keychain + (key,),
+                          meta=self._meta,
+                          **self._kwargs
+                          )
+        return attr
 
-    def _write(self, data):
-        raise NotImplementedError
+    def __setitem__(self, key, value):
+        self._check_writable()
 
+        data = self._get_data()
+        data[key] = value
+        self._set_data(data)
+
+    def __delitem__(self, key):
+        self._check_writable()
+
+        data = self._get_data()
+        del data[key]
+        self._set_data(data)
+
+    def __len__(self):
+        return len(self._get_data().keys())
+
+    def __iter__(self):
+        return iter(self._get_data().keys())
+
+    def __eq__(self, other):
+        return self._get_data() == other
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, repr(self._get_data()))
+
+    # internal api
+    # ============
     def _get_data(self):
         """Proxies the underlying data source
 
@@ -165,44 +201,20 @@ class AbstractSource(object):
         else:
             self[attr] = value
 
-    def __getitem__(self, key):
-        attr = self._get_data()[key]
-        if isinstance(attr, dict):
-            return Source(parent=self,
-                          keychain=self._keychain + (key,),
-                          meta=self._meta,
-                          **self._kwargs
-                          )
-        return attr
-
-    def __setitem__(self, key, value):
-        self._check_writable()
-
-        data = self._get_data()
-        data[key] = value
-        self._set_data(data)
-
     def __delattr__(self, name):
         del self[name]
 
-    def __delitem__(self, key):
-        self._check_writable()
+    # required overrides
+    # ==================
+    def _read(self):
 
-        data = self._get_data()
-        del data[key]
-        self._set_data(data)
 
-    def __len__(self):
-        return len(self._get_data().keys())
+        raise NotImplementedError
 
-    def __iter__(self):
-        return iter(self._get_data().keys())
+    def _write(self, data):
 
-    def __eq__(self, other):
-        return self._get_data() == other
 
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, repr(self._get_data()))
+        raise NotImplementedError
 
 
 class LockedSourceMixin(AbstractSource):
@@ -237,6 +249,9 @@ class CacheMixin(AbstractSource):
         self._check_writable()
 
         try:
+            # we need to directly call write here otherwise if _set_data
+            # raises a NotImplementedError in AbstractSource it will
+            # call _get_data which then gets the current cache back
             self._write(self._cache)
         except NotImplementedError:
             self._parent.write_cache()
