@@ -25,13 +25,6 @@ def test_raise_exception_on_wrong_source_types(source, error_type):
     assert "not '%s'" % error_type in str(exc_info)
 
 
-def test_raise_exception_on_unknown_parameters():
-    with pytest.raises(TypeError) as exc_info:
-        StackedConfig(unknown='value')
-
-    assert "unknown" in str(exc_info)
-
-
 def test_set_keychain():
     config = StackedConfig(
         DictSource({'a': {'b': {'c': 2}}}),

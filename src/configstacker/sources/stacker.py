@@ -100,23 +100,15 @@ class SourceList(MutableSequence):
         return 'SourceList(%s)' % repr(self._sources)
 
 
-class StackedConfig(object):
+class StackedConfig(base.Source):
     """Multi layer config object"""
 
-    # disable setattr as long as we initialize instance attributes
-    _initialized = False
 
     def __init__(self, *sources, **kwargs):
+        super(StackedConfig, self).__init__(**kwargs)
+
         if not sources:
             sources = [dictsource.DictSource()]
-
-        # _parent is the parent object
-        # _parent_key is the key on the parent that led to this object
-        self._parent, self._parent_key = kwargs.pop('parent', (None, None))
-
-        # _keychain is a list of keys that led from the root
-        # config to this (sub)config
-        self._keychain = kwargs.pop('keychain', [])
 
         # exposing the source list through an attribute and manipulating
         # it directly contradicts with the law of demeter. However, in
@@ -133,25 +125,9 @@ class StackedConfig(object):
         # custom strategies that describe how to merge multiple
         # values of the same key
         self._strategy_map = kwargs.pop('strategy_map', {})
-        # custom converters that define how to deal with individual
-        # values
-        self._converter_map = converters.make_converter_map(
-            kwargs.pop('converter_map', {})
-        )
 
-        # inform user about unknown parameters
-        if kwargs:
-            raise TypeError('unknown parameters specified %s' % kwargs)
-
-        # activate setattr
-        self._initialized = True
-
-    def get_root(self):
-        try:
-            return self._parent.get_root()
-        except AttributeError:
-            return self
-
+    # public api
+    # ==========
     def is_writable(self):
         try:
             next(self.source_list.writable())
@@ -178,19 +154,8 @@ class StackedConfig(object):
 
         return dict(_dump(self))
 
-    def get(self, name, default=None):
-        try:
-            return self[name]
-        except KeyError:
-            return default
-
-    def setdefault(self, name, value):
-        try:
-            return self[name]
-        except KeyError:
-            self[name] = value
-            return value
-
+    # dict api
+    # ========
     def keys(self):
         def key_iterator():
             yielded_keys = set()
@@ -203,40 +168,10 @@ class StackedConfig(object):
 
         return sorted(key_iterator())
 
-    def values(self):
-        for key in self.keys():
-            yield self[key]
-
-    def items(self):
-        for key in self.keys():
-            yield key, self[key]
-
     def update(self, *others):
         for other in others:
             for key, value in other.items():
                 self[key] = value
-
-    def _get_typed_value(self, key, value):
-        for source in self.source_list.typed():
-            try:
-                typed_value = source[key]
-            except KeyError:
-                continue
-
-            type_info = type(typed_value)
-            return _convert_value_to_type(value, type_info)
-        return value
-
-    def _make_subconfig(self, sources, key):
-        return StackedConfig(*sources,
-                             parent=self,
-                             keychain=self._keychain+(key,),
-                             strategy_map=self._strategy_map,
-                             converter_map=self._converter_map
-                             )
-
-    def __getattr__(self, key):
-        return self[key]
 
     def __getitem__(self, key):
         # will be used as input for a new sublevel config with the
@@ -281,15 +216,6 @@ class StackedConfig(object):
         else:
             raise KeyError("Key '%s' was not found" % key)
 
-    def __setattr__(self, attr, value):
-        if any([self._initialized is False,
-                attr == '_initialized',
-                attr in self.__dict__,
-                attr in StackedConfig.__dict__]):
-            super(StackedConfig, self).__setattr__(attr, value)
-        else:
-            self[attr] = value
-
     def __setitem__(self, key, value):
         for source in self.source_list:
             if key in source:
@@ -323,6 +249,34 @@ class StackedConfig(object):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, repr(self.dump()))
+
+    # internal api
+    # ============
+    def _read(self):
+        # not yet used due to refactorings. Probably we can move actual
+        # traversing here. However that might conflict with the initial
+        # intention to load the whole dictionary. Having lots of sources
+        # might then be problematic.
+        pass
+
+    def _get_typed_value(self, key, value):
+        for source in self.source_list.typed():
+            try:
+                typed_value = source[key]
+            except KeyError:
+                continue
+
+            type_info = type(typed_value)
+            return _convert_value_to_type(value, type_info)
+        return value
+
+    def _make_subconfig(self, sources, key):
+        return StackedConfig(*sources,
+                             parent=self,
+                             keychain=self._keychain+(key,),
+                             strategy_map=self._strategy_map,
+                             converter_map=self._converter_map
+                             )
 
 
 def _convert_value_to_type(value, type_info):
