@@ -306,7 +306,7 @@ class CustomConverterMixin(AbstractSource):
 class DefaultValueMixin(AbstractSource):
 
     def __init__(self, *args, **kwargs):
-        self._default_value = kwargs.get('default_for_missing', None)
+        self._add_subsection = kwargs.get('auto_subsection', False)
 
         super(DefaultValueMixin, self).__init__(*args, **kwargs)
 
@@ -314,9 +314,8 @@ class DefaultValueMixin(AbstractSource):
         try:
             return super(DefaultValueMixin, self).__getitem__(key)
         except KeyError as err:
-            if self._default_value is not None:
-                super(DefaultValueMixin, self).__setattr__(
-                        key, self._default_value)
+            if self._add_subsection:
+                super(DefaultValueMixin, self).__setattr__(key, {})
                 return super(DefaultValueMixin, self).__getitem__(key)
             raise
 

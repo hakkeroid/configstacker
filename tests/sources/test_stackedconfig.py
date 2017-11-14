@@ -100,7 +100,7 @@ def test_stacked_len():
 
 
 def test_write_to_empty_sources():
-    source1 = DictSource(default_for_missing={})
+    source1 = DictSource(auto_subsection=True)
     source2 = DictSource()
     config = StackedConfig(source2, source1)
 

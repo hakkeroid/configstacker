@@ -189,7 +189,7 @@ def test_source_setdefault_as_subsection():
 
 
 def test_set_missing_key_to_default_value():
-    config = DictSource(default_for_missing={})
+    config = DictSource(auto_subsection=True)
 
     config.a.b = 1
     config['x'].y = 2

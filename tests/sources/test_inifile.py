@@ -57,7 +57,7 @@ def test_read_ini_source_with_subsections(ini_file):
 
 
 def test_write_ini_source(ini_file):
-    config = INIFile(str(ini_file), subsection_token='.', default_for_missing={})
+    config = INIFile(str(ini_file), subsection_token='.', auto_subsection=True)
 
     assert config.a == '1'
     assert config.b.c == '2'
