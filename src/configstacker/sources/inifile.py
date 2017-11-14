@@ -15,7 +15,8 @@ __all__ = ['INIFile']
 class INIFile(base.Source):
     """Source for ini files"""
 
-    _is_typed = False
+    class Meta:
+        is_typed = False
 
     def __init__(self, source, subsection_token=None, **kwargs):
         super(INIFile, self).__init__(**kwargs)

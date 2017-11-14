@@ -16,16 +16,18 @@ class SourceMeta(type):
     """Initialize subclasses and source base class"""
 
     def __new__(self, name, bases, dct):
-        if all([not '_read' in dct,
-                name != 'Source',
-                not name.endswith('Mixin')]):
+        if all([name != 'Source',
+                not name.endswith('Mixin'),
+                '_read' not in dct]):
             msg = '%s is missing the required "_read" method' % name
             raise NotImplementedError(msg)
+
+        user_meta = dct.get('Meta')
 
         dct['_meta'] = MetaInfo(
                 readonly='_write' not in dct,
                 source_name=name,
-                is_typed=dct.get('_is_typed', True)
+                is_typed=getattr(user_meta, 'is_typed', True)
         )
 
         return super(SourceMeta, self).__new__(self, name, bases, dct)

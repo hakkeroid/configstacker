@@ -13,7 +13,8 @@ __all__ = ['Environment']
 class Environment(base.Source):
     """Reads environment variables"""
 
-    _is_typed = False
+    class Meta:
+        is_typed = False
 
     def __init__(self, prefix, subsection_token='_', **kwargs):
         super(Environment, self).__init__(**kwargs)
