@@ -590,7 +590,7 @@ of the application we also don't need to lazy load them. Therefore the
 arguments can already be parsed in the ``__init__`` method which makes
 ``_read`` very simple.
 
-.. literalinclude:: cookbook/cli-source.py
+.. literalinclude:: examples/cli-source.py
 
 We can test it by invoking our handler and providing some arguments to
 it.

@@ -28,9 +28,9 @@ class CliSource(cs.Source):
 
 
 def main():
-    # just some demonstration code when executed as a script.
     cfg = CliSource()
 
+    # just some demonstration code
     if cfg.verbose > 0:
         print('Job runner:\t{url}:{port}'.format(**cfg.host))
     if cfg.verbose > 1:

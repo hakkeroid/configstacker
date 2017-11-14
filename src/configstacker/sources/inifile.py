@@ -13,7 +13,35 @@ __all__ = ['INIFile']
 
 
 class INIFile(base.Source):
-    """Source for ini files"""
+    """Source loader for INI-files.
+
+    INI-files are untyped sources. If you need typed data you either
+    have to use :any:`configstacker.StackedConfig` with another source
+    that is typed or add a :any:`Converter` which takes care of all type
+    :ref:`conversions <advanced-converters>`. INI-files are writable by
+    default.
+
+    Args:
+        source (str): A path to an INI-file.
+
+        subsection_token (str, optional): Will be used to split
+            a section header into subsections. Defaults to ``.``.
+
+        root_section (str, optional): Will be used to identify the root
+            section in the INI file. Defaults to `__root__`.
+
+        kwargs: See :any:`Source` for additional options.
+
+    Examples:
+        >>> from configstacker import INIFile
+        >>> config = INIFile('path/to/config.ini')
+        >>> config.simple_int
+        '10'
+        >>> config.is_typed()
+        False
+        >>> config.is_writable()
+        True
+    """
 
     class Meta:
         is_typed = False

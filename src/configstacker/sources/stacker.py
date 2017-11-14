@@ -22,6 +22,23 @@ PY35 = sys.version_info[0:2] >= (3, 5)
 
 
 class SourceList(MutableSequence):
+    """Prioritized container for source handlers.
+
+    When adding sources the priority goes from the lowest to the highest
+    priority. However, when iterating over the source list, it iterates
+    from the highest to the lowest priority. That way you can easily
+    append new high-priority sources to the end without caring about the
+    correct index.
+
+    Args:
+        sources (:any:`Source`): One or more source loaders.
+
+        keychain (tuple): The keychain specifies on which sublevel the
+            sources will be iterated. Default is an empty list.
+
+        reverse (bool): Specify whether the source list should be
+            traversed in reverse. By default this will be False.
+    """
 
     def __init__(self, *sources, **kwargs):
         self._validate_sources(sources)
@@ -45,11 +62,18 @@ class SourceList(MutableSequence):
                             " cannot be mutated")
 
     def insert(self, index, source):
+        """Insert source before index.
+
+        Raises:
+            ValueError: If `source` is not a valid
+                :any:`configstacker.Source` instance.
+        """
         self._check_mutability()
         self._validate_sources([source])
         self._sources.insert(index, source)
 
     def typed(self):
+        """Iterate over all typed sources."""
         def filter_by_type(source):
             return source.is_typed()
 
@@ -57,6 +81,7 @@ class SourceList(MutableSequence):
             yield source
 
     def writable(self):
+        """Iterate over all writable sources."""
         def filter_by_writability(source):
             return source.is_writable()
 
@@ -109,8 +134,64 @@ class SourceList(MutableSequence):
 
 
 class StackedConfig(base.Source):
-    """Multi layer config object"""
+    """Source loader for stacking multiple other source loaders.
 
+    StackedConfig itself does not read any external configuration
+    sources but relies completely on other source loaders to do so.
+    What StackedConfig does instead is:
+
+        - searching for the requested key.
+        - converting values with the help of other sources in case the
+          requested value is untyped.
+        - converting values as defined in ``converters``.
+        - collecting and merging values depending on the ``strategy_map``.
+
+    Args:
+        sources (:any:`Source`): One or more source loaders that shall
+            be used.
+
+        strategy_map (dict): Set the :any:`strategy_map`.
+
+        converters (list): Provide a list of :any:`converters` which
+            works exactly the same as :any:`Source.converters <Source>`
+            except that it is applied to all sources, when the values
+            are retrieved.
+
+        reverse (bool): Specify whether the priority of the source list
+            should be reversed. You can also modify this value after
+            object creation through
+            :any:`self.source_list.reverse() <SourceList.reverse>`.
+
+    Attributes:
+        strategy_map: The strategy map is a dictionary where the
+            keys are the name of values you want to handle and the
+            values are the strategies. A strategy is a simple function
+            that requires the two parameters ``previous`` and ``next_``.
+            You can either implement your own functions or use the
+            :py:mod:`builtin strategies <configstacker.strategies>`.
+
+            .. py:function:: strategy(previous, next_)
+
+                This function will be called in the read process to
+                consume the previous and next value. It works similar to
+                python's :any:`reduce <functools.reduce>`
+
+                :param previous:
+                    The value from the last calculation. When the
+                    strategy function is called for the first time
+                    previous will be set to :any:`EMPTY`. In that case
+                    you should return the default or initial value which
+                    could also just be the value of `next_`.
+
+                :param next_:
+                    The next found value that needs to be handled.
+
+                :return:
+                    The desired value for this strategy.
+
+        source_list: A reference to the underlying :any:`SourceList` and
+            holds all source loaders that will be used by StackedConfig.
+    """
 
     def __init__(self, *sources, **kwargs):
         super(StackedConfig, self).__init__(**kwargs)
@@ -122,7 +203,7 @@ class StackedConfig(base.Source):
         # it directly contradicts with the law of demeter. However, in
         # this case implementing the source list's interface would make
         # the stacker's interface unneccessarily complex and adds more
-        # keywords that has to be escaped through dict access.
+        # keywords that have to be escaped through dict access.
         # https://en.wikipedia.org/wiki/Law_of_Demeter.
         self.source_list = SourceList(
             *sources,

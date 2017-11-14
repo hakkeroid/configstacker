@@ -11,7 +11,25 @@ __all__ = ['YAMLFile']
 
 
 class YAMLFile(base.Source):
-    """Source for yaml files"""
+    """Source loader for yaml files.
+
+    Yaml files are typed sources and by default writable.
+
+    Args:
+        source (str): A path to a yaml file.
+
+        kwargs: See :any:`Source` for additional options.
+
+    Examples:
+        >>> from configstacker import YAMLFile
+        >>> config = YAMLFile('path/to/config.yml')
+        >>> config.simple_int
+        10
+        >>> config.is_typed()
+        True
+        >>> config.is_writable()
+        True
+    """
 
     def __init__(self, source, **kwargs):
         try:

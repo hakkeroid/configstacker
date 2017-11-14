@@ -41,13 +41,6 @@ class SourceMeta(type):
 
 @six.add_metaclass(SourceMeta)
 class AbstractSource(object):
-    """A source tree container
-
-    The AbstractSource handles traversing and accessing
-    the underlying data map. Nested values will be returned
-    as another source object which keeps a reverse link
-    to the parent source.
-    """
 
     _initialized = False
 
@@ -73,29 +66,54 @@ class AbstractSource(object):
     # public api
     # ==========
     def get_root(self):
+        """Get the root configuration object from any subsection level.
+
+        Example:
+            >>> config = DictSource({'a': {'b': 1}})
+            >>> config.a
+            DictSource({'b': 1})
+            >>> config.a.get_root()
+            DictSource({'a': {'b': 1}})
+            >>> config is config.a.get_root()
+            True
+        """
         try:
             return self._parent.get_root()
         except AttributeError:
             return self
 
     def is_writable(self):
+        """Check whether this source loader can be written to."""
         return not self._meta.readonly
 
     def is_typed(self):
+        """Check whether this source loader contains type information.
+
+        This will be used by configstacker to retrieve type information
+        for untyped source loaders so that values can be converted
+        accordingly.
+        """
         return self._meta.is_typed
 
     def dump(self):
+        """Read and dump data from underlying source.
+
+        Returns:
+            The dumped data will be a default python :any:`dictionary <dict>`.
+        """
         return self._get_data()
 
     # dict api
     # ========
     def get(self, name, default=None):
+        """Same as :any:`dict.get`."""
         try:
             return self[name]
         except KeyError:
             return default
 
     def setdefault(self, name, value):
+        """Same as :any:`dict.setdefault`."""
         try:
             return self[name]
         except KeyError:
@@ -103,17 +121,21 @@ class AbstractSource(object):
             return self[name]
 
     def keys(self):
+        """Same as :any:`dict.keys`."""
         return sorted(six.iterkeys(self._get_data()))
 
     def values(self):
+        """Same as :any:`dict.values`."""
         for key in self.keys():
             yield self[key]
 
     def items(self):
+        """Same as :any:`dict.items`."""
         for key in self.keys():
             yield key, self[key]
 
     def update(self, arg, **kwargs):
+        """Same as :any:`dict.update`."""
         self._check_writable()
 
         data = self._get_data()
@@ -205,13 +227,32 @@ class AbstractSource(object):
     # required overrides
     # ==================
     def _read(self):
+        """Provide read access to underlying source.
 
+        This method should return the content of the underlying source
+        as a simply dictionary. Any recursion needs to be done in this
+        method and the returned dictionary must contain the whole
+        dataset including subdictionaries. You can make use of
+        :any:`utils.make_subdicts` to simplify the recursive part.
 
+        Raises:
+            NotImplementedError: Will be raised if this method was not
+                overridden in a subclass.
+        """
         raise NotImplementedError
 
     def _write(self, data):
+        """Provide write access to underlying source.
 
+        This method is optional and automatically switches the source
+        loader into read-only mode if it is not implemented in
+        a subclass.
 
+        Args:
+            data (dict): Receives a dictionary that needs to be written
+                back to the underlying source. Traversing the dictionary
+                needs to be done in this method.
+        """
         raise NotImplementedError
 
 
@@ -223,6 +264,12 @@ class LockedSourceMixin(AbstractSource):
         super(LockedSourceMixin, self).__init__(*args, **kwargs)
 
     def is_writable(self):
+        """Check whether this source loader can be written to.
+
+        This check depends on the loaders ability to write data back to
+        the underlying source and whether the :any:`readonly <Source>`
+        parameter was set.
+        """
         is_writable = super(LockedSourceMixin, self).is_writable()
         return is_writable and not self._locked
 
@@ -244,6 +291,14 @@ class CacheMixin(AbstractSource):
         super(CacheMixin, self).__init__(*args, **kwargs)
 
     def write_cache(self):
+        """Write cached data to the underlying source.
+
+        This feature will be active when the :any:`Source's <Source>`
+        ``cached=True`` was set initially.
+
+        Raises:
+            TypeError: Raised if the source is set to read-only.
+        """
         self._check_writable()
 
         try:
@@ -255,6 +310,13 @@ class CacheMixin(AbstractSource):
             self._parent.write_cache()
 
     def clear_cache(self):
+        """Empty cache without reloading it.
+
+        The internal cache will be flushed. No other attempt is made to
+        reload the data until the value is accessed again. This feature
+        will be active when the :any:`Source's <Source>` ``cached=True``
+        was set initially.
+        """
         self._cache = None
 
     def _get_data(self):
@@ -274,6 +336,14 @@ class CacheMixin(AbstractSource):
 
 
 class ConverterMixin(AbstractSource):
+    """Provide a list of prioritized value converters.
+
+    You can either provide :any:`converters <Converter>` or more
+    conveniently tuples that can be used to create converters. For that
+    to work the first element has to be the key. Then follows the
+    customizer function and the third value needs to be the resetter
+    function.
+    """
 
     def __init__(self, *args, **kwargs):
         # will be applied to child classes as sublevel sources
@@ -284,6 +354,14 @@ class ConverterMixin(AbstractSource):
         super(ConverterMixin, self).__init__(*args, **kwargs)
 
     def dump(self):
+        """Read and dump data from underlying source.
+
+        Additionally all converters will be applied to the returned
+        dictionary.
+
+        Returns:
+            The dumped data will be a default python :any:`dictionary <dict>`.
+        """
         dumped = super(ConverterMixin, self).dump()
 
         def convert_dict(data):
@@ -349,4 +427,35 @@ class Source(CacheMixin,
              LockedSourceMixin,
              AbstractSource
              ):
-    """Source class with all features enabled"""
+    """Base class for all source loaders.
+
+    The source loader handles traversing and accessing the underlying
+    data source. Nested sections will be returned as another source
+    loader object to ensure that the source loader interface stays the
+    same on all levels.
+
+    Args:
+        cached (bool): Activate the internal cache to prevent
+            immediate writes to the underlying source. Defaults to
+            False. You can handle the cache with :any:`clear_cache` and
+            :any:`write_cache`
+
+        readonly (bool): Disable the ability to write to this source
+            loader. Can be used to open a source without accidentally
+            changing it. Defaults to False.
+
+        converters (list): Provide a list of :any:`converters`. Instead
+            of converter objects you can also provide simple tuples with
+            its elements being the arguments for a converter. That way
+            configstacker will create converters on its own.
+
+        auto_subsection (bool): If you are trying to access a value that
+            does not exist configstacker usually throws
+            a :obj:`KeyError`. Setting this value to True causes
+            configstacker to add the missing key as a new subsection
+            instead. This defaults to False as
+
+    Raises:
+        KeyError: You tried to access a key that does not exist.
+        TypeError: You tried to write to a source which is read-only.
+    """

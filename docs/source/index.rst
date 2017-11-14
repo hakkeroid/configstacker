@@ -8,6 +8,7 @@ Welcome to configstacker's documentation
    introduction
    quickstart
    advanced
+   api
    license
    version
    CHANGELOG

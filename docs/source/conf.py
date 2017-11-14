@@ -35,11 +35,15 @@ from recommonmark.parser import CommonMarkParser
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-    'sphinx.ext.coverage'
+    'sphinx.ext.coverage',
+    'sphinx.ext.napoleon',
 ]
+
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -79,7 +83,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = ['_build', '_templates']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -189,3 +193,18 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+
+def skip_namedtuple_attrib_docstring(app, what, name, obj, skip, options):
+    """Remove namedtuple boilerplate from docstrings."""
+    if hasattr(obj, '__doc__') and obj.__doc__ and 'Alias' in obj.__doc__:
+        print('Skip namedtuple attribute "%s"' % str(name))
+        return True
+    return skip
+
+
+def setup(app):
+    app.connect(
+        'autodoc-skip-member',
+        skip_namedtuple_attrib_docstring,
+    )
