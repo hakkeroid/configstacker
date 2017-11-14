@@ -23,7 +23,7 @@ class SourceList(MutableSequence):
 
         # _keychain is a list of keys that leads from the root
         # config to the subconfig
-        self.keychain = kwargs.pop('keychain', [])
+        self._keychain = kwargs.pop('keychain', ())
 
         # convenience functionality that allows to specify
         # the priority for traversing the sources
@@ -34,7 +34,7 @@ class SourceList(MutableSequence):
             raise ValueError('Unknown parameters: %s' % kwargs)
 
     def _check_mutability(self):
-        if self.keychain:
+        if self._keychain:
             raise TypeError("The source list of a sublevel configuration"
                             " cannot be mutated")
 
@@ -68,7 +68,7 @@ class SourceList(MutableSequence):
             if filter_fn(source) is False:
                 continue
             traversed_source = source
-            for key in self.keychain:
+            for key in self._keychain:
                 traversed_source = traversed_source[key]
             yield traversed_source
 
@@ -124,7 +124,7 @@ class StackedConfig(base.Source):
 
         # custom strategies that describe how to merge multiple
         # values of the same key
-        self._strategy_map = kwargs.pop('strategy_map', {})
+        self.strategy_map = kwargs.pop('strategy_map', {})
 
     # public api
     # ==========
@@ -178,7 +178,7 @@ class StackedConfig(base.Source):
         # key added to the keychain.
         subqueue = deque()
 
-        strategy = self._strategy_map.get(key)
+        strategy = self.strategy_map.get(key)
         converter = self._converter_map.get(key)
         result = strategies.EMPTY
 
@@ -274,7 +274,7 @@ class StackedConfig(base.Source):
         return StackedConfig(*sources,
                              parent=self,
                              keychain=self._keychain+(key,),
-                             strategy_map=self._strategy_map,
+                             strategy_map=self.strategy_map,
                              converter_map=self._converter_map
                              )
 
