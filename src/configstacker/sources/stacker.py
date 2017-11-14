@@ -38,10 +38,10 @@ class SourceList(MutableSequence):
             raise TypeError("The source list of a sublevel configuration"
                             " cannot be mutated")
 
-    def insert(self, pos, item):
+    def insert(self, index, source):
         self._check_mutability()
-        self._validate_sources([item])
-        self._sources.insert(pos, item)
+        self._validate_sources([source])
+        self._sources.insert(index, source)
 
     def typed(self):
         def filter_by_type(source):
@@ -129,20 +129,14 @@ class StackedConfig(base.Source):
     # public api
     # ==========
     def is_writable(self):
-        try:
-            next(self.source_list.writable())
-        except StopIteration:
-            return False
-        else:
+        for source in self.source_list.writable():
             return True
+        return False
 
     def is_typed(self):
-        try:
-            next(self.source_list.typed())
-        except StopIteration:
-            return False
-        else:
+        for source in self.source_list.typed():
             return True
+        return False
 
     def dump(self):
         def _dump(obj):
@@ -223,12 +217,11 @@ class StackedConfig(base.Source):
                 return
 
         # no source was found so write it to first writable source
-        try:
-            writable_source = next(self.source_list.writable())
-        except StopIteration:
-            raise TypeError('No writable sources found')
-        else:
-            writable_source[key] = value
+        for source in self.source_list.writable():
+            source[key] = value
+            return
+
+        raise TypeError('No writable sources found')
 
     def __eq__(self, other):
         return self.dump() == other.dump()

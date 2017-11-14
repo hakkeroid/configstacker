@@ -4,7 +4,6 @@ __all__ = ['make_subdicts']
 
 
 def make_subdicts(base, keychain):
-    while keychain:
-        subsection = keychain.pop(0)
-        base = base.setdefault(subsection, {})
+    for key in keychain:
+        base = base.setdefault(key, {})
     return base

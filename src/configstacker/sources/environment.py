@@ -23,7 +23,7 @@ class Environment(base.Source):
 
     def _read(self):
         data = {}
-        for keys, value in _iter_environ(self._prefix):
+        for keys, value in self._iter_environ():
             keychain = keys.lower().split(self.subsection_token)
 
             # do not remove prefix when it is an empty string
@@ -31,6 +31,13 @@ class Environment(base.Source):
             # variables.
             if self._prefix:
                 keychain.pop(0)
+
+            # either the subsection token was changed or the prefix was
+            # found in the environment variables without any key name
+            # after it. No matter what, in this case we cannot sanely
+            # read any data.
+            if not keychain:
+                continue
 
             # separate last key which is a leaf
             key = keychain.pop()
@@ -52,9 +59,8 @@ class Environment(base.Source):
 
         _write(data, [self._prefix])
 
-
-def _iter_environ(prefix):
-    prefix_ = prefix.lower()
-    for key, value in six.iteritems(os.environ):
-        if key.lower().startswith(prefix_):
-            yield key, value
+    def _iter_environ(self):
+        prefix_ = self._prefix.lower()
+        for key, value in six.iteritems(os.environ):
+            if key.lower().startswith(prefix_):
+                yield key, value
