@@ -49,9 +49,8 @@ class AbstractSource(object):
     _initialized = False
 
     def __init__(self, **kwargs):
-        # _parent is the parent object
-        # _parent_key is the key on the parent that led to this object
-        self._parent, self._parent_key = kwargs.pop('parent', (None, None))
+        self._keychain = kwargs.pop('keychain', ())
+        self._parent = kwargs.pop('parent', None)
 
         # kwargs.get would override the metaclass settings
         # so only change it if it's really given.
@@ -62,6 +61,11 @@ class AbstractSource(object):
         # mixins can make use of that to apply attributes to subsources.
         # therefore they should not pop values from kwargs
         self._kwargs = kwargs
+
+    @property
+    def _uplink_key(self):
+        # the key on the parent that led to this object
+        return self._keychain[-1] if self._keychain else None
 
     def get_root(self):
         try:
@@ -128,7 +132,7 @@ class AbstractSource(object):
         try:
             return self._read()
         except NotImplementedError:
-            return self._parent._get_data()[self._parent_key]
+            return self._parent._get_data()[self._uplink_key]
 
     def _set_data(self, data):
         self._check_writable()
@@ -137,7 +141,7 @@ class AbstractSource(object):
             self._write(data)
         except NotImplementedError:
             result = self._parent._get_data()
-            result[self._parent_key] = data
+            result[self._uplink_key] = data
             self._parent._set_data(result)
 
     def _check_writable(self):
@@ -162,7 +166,8 @@ class AbstractSource(object):
     def __getitem__(self, key):
         attr = self._get_data()[key]
         if isinstance(attr, dict):
-            return Source(parent=(self, key),
+            return Source(parent=self,
+                          keychain=self._keychain + (key,),
                           meta=self._meta,
                           **self._kwargs
                           )

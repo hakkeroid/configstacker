@@ -229,8 +229,8 @@ class StackedConfig(object):
 
     def _make_subconfig(self, sources, key):
         return StackedConfig(*sources,
-                             parent=(self, key),
-                             keychain=self._keychain+[key],
+                             parent=self,
+                             keychain=self._keychain+(key,),
                              strategy_map=self._strategy_map,
                              converter_map=self._converter_map
                              )
@@ -344,5 +344,3 @@ def _convert_value_to_type(value, type_info):
             return value
     else:
         return type_info(value)
-
-
