@@ -5,7 +5,7 @@ import io
 import pytest
 
 from configstacker import (DictSource, Environment, INIFile, StackedConfig,
-                           strategies)
+                           converters, strategies)
 
 
 def test_use_dictsource_on_empty_stacked_config():
@@ -457,17 +457,17 @@ def test_stacked_config_with_type_conversions():
     assert config.l == set(['3', '4'])
 
 
-def test_stacked_config_with_untyped_source_and_custom_converters():
+def test_stacked_config_with_untyped_source_and_converters():
     typed = DictSource({'a': 1})
     untyped = INIFile(io.StringIO(pytest.helpers.unindent(u"""
         [__root__]
         a=11
     """)))
-    converter_map = {
-        'a': (lambda v: v*2, lambda v: v/2),
-    }
+    converter_list = [
+        ('a', lambda v: v*2, lambda v: v/2),
+    ]
 
-    config = StackedConfig(typed, untyped, converter_map=converter_map)
+    config = StackedConfig(typed, untyped, converters=converter_list)
 
     assert config.a == 22
 
@@ -577,20 +577,20 @@ def mytype_config():
         return {'c': mytype.c}
 
     data = {'a': {'b': {'c': 1}}}
-    types = {
-        'b': (load_mytype, unload_mytype)
-    }
+    converter_list = [
+        ('b', load_mytype, unload_mytype)
+    ]
 
     config = StackedConfig(
         DictSource(data),
         DictSource(data),
-        converter_map=types,
+        converters=converter_list,
     )
 
     return MyType, data, config
 
 
-def test_read_source_with_complex_custom_converters(mytype_config):
+def test_read_source_with_complex_converters(mytype_config):
     MyType, data, config = mytype_config
 
     mytype = MyType(1)
@@ -606,7 +606,7 @@ def test_read_source_with_complex_custom_converters(mytype_config):
     assert isinstance(dumped['a']['b'], MyType)
 
 
-def test_write_source_with_complex_custom_converters(mytype_config):
+def test_write_source_with_complex_converters(mytype_config):
     MyType, data, config = mytype_config
 
     mytype = MyType(10)

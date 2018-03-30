@@ -105,41 +105,46 @@ def test_source_items():
 
 def test_source_items_with_converters():
     data = {'a': {'b': 1}}
-    converters = {
-        'b': (lambda v: 2*v, lambda v: v/2)
-    }
-    config = DictSource(data, converter_map=converters)
+    converter_list = [
+        ('b', lambda v: 2*v, lambda v: v/2),
+    ]
+    config = DictSource(data, converters=converter_list)
 
     items = [i for i in config.a.items()]
     assert items == [('b', 2)]
 
 
-@pytest.mark.parametrize('converter,value,expected,reset', [
-    (converters.bools(), 'True', True, 'True'),
-    (converters.bools(), 'false', False, 'False'),
-    (converters.bools(), 'yes', True, 'True'),
-    (converters.bools(), 'No', False, 'False'),
-    (converters.bools(), '1', True, 'True'),
-    (converters.dates(), '2017-10-22',
+@pytest.mark.parametrize('converter,value,customized,reset', [
+    (converters.bools('a'), 'True', True, 'True'),
+    (converters.bools('a'), 'false', False, 'False'),
+    (converters.bools('a'), 'yes', True, 'True'),
+    (converters.bools('a'), 'No', False, 'False'),
+    (converters.bools('a'), '1', True, 'True'),
+
+    (converters.dates('a'), '2017-10-22',
         datetime.date(2017, 10, 22), '2017-10-22'),
-    (converters.dates('%d.%m.%Y'), '22.10.2017',
+
+    (converters.dates('a', '%d.%m.%Y'), '22.10.2017',
         datetime.date(2017, 10, 22), '22.10.2017'),
+
     # use default strict format
-    (converters.datetimes(), '2017-10-22T10:00:20',
+    (converters.datetimes('a'), '2017-10-22T10:00:20',
         datetime.datetime(2017, 10, 22, 10, 0, 20), '2017-10-22T10:00:20'),
+
     # use different format that allows empty values
-    (converters.datetimes('%Y-%m'), '2017-10',
+    (converters.datetimes('a', '%Y-%m'), '2017-10',
         datetime.datetime(2017, 10, 1, 0, 0, 0), '2017-10'),
 ])
-def test_builtin_converters(converter, value, expected, reset):
+def test_builtin_converters(converter, value, customized, reset):
     data = {'a': value}
-    types = {
-        'a': converter,
-    }
-    config = DictSource(data, converter_map=types)
+    config = DictSource(data, converters=[converter])
 
-    assert config.a == expected
-    assert config._reset('a', config.a) == reset
+    assert config.a == customized
+
+    del config.a
+    config.a = customized
+
+    assert config._data['a'] == reset
 
 
 def test_source_keys():
@@ -160,10 +165,10 @@ def test_source_values():
 
 def test_source_values_with_converters():
     data = {'a': {'b': 1}}
-    converters = {
-        'b': (lambda v: 2*v, lambda v: v/2)
-    }
-    config = DictSource(data, converter_map=converters)
+    converter_list = [
+        ('b', lambda v: 2*v, lambda v: v/2),
+    ]
+    config = DictSource(data, converters=converter_list)
 
     items = [i for i in config.a.values()]
     assert items == [2]
@@ -216,11 +221,11 @@ def test_source_update(container):
 
 def test_read_source_with_converters():
     data = {'a': 1, 'b': {'c': 2}}
-    converters = {
-        'a': (str, int),
-        'c': (lambda v: 2*v, lambda v: v/2),
-    }
-    config = DictSource(data, converter_map=converters)
+    converter_list = [
+        ('a', str, int),
+        ('c', lambda v: 2*v, lambda v: v/2),
+    ]
+    config = DictSource(data, converters=converter_list)
 
     assert config.a == '1'
     assert config.b.c == 4
@@ -230,11 +235,11 @@ def test_read_source_with_converters():
 
 def test_write_source_with_converters():
     data = {'a': 1, 'b': {'c': 2}}
-    converters = {
-        'a': (str, int),
-        'c': (lambda v: 2*v, lambda v: v/2)
-    }
-    config = DictSource(data, converter_map=converters)
+    converter_list = [
+        ('a', str, int),
+        ('c', lambda v: 2*v, lambda v: v/2),
+    ]
+    config = DictSource(data, converters=converter_list)
 
     config.a = '1'
     config.b.c = 4
@@ -255,11 +260,11 @@ def mytype_config():
         return {'b': mytype.b}
 
     data = {'a': {'b': 1}}
-    converters = {
-        'a': (load_mytype, unload_mytype)
-    }
+    converter_list = [
+        ('a', load_mytype, unload_mytype),
+    ]
 
-    return MyType, data, DictSource(data, converter_map=converters)
+    return MyType, data, DictSource(data, converters=converter_list)
 
 
 def test_read_source_with_complex_converters(mytype_config):
@@ -292,6 +297,27 @@ def test_write_source_with_complex_converters(mytype_config):
 
     assert dumped['a'].b == mytype.b
     assert isinstance(dumped['a'], MyType)
+
+
+def test_read_source_with_wildcard_converters():
+    data = {'a': {'b': 1,
+                  'c': 2},
+            'x': {'b': 10,
+                  'c': 20}}
+    converter_list = [
+        ('a.*', lambda v: 2*v, lambda v: v/2),
+        ('*.c', lambda v: 3*v, lambda v: v/3),
+    ]
+    config = DictSource(data, converters=converter_list)
+
+    # converted by first converter a.*
+    assert config.a.b == 2
+    # fits both converters, however first one is used due to higher priority
+    assert config.a.c == 4
+    # not converted because no converter fits
+    assert config.x.b == 10
+    # converted by second converter *.c
+    assert config.x.c == 60
 
 
 def test_read_cached_dict_source():

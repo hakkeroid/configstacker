@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import collections
+import re
 
 import six
 
@@ -275,19 +276,18 @@ class CacheMixin(AbstractSource):
             return super(CacheMixin, self)._set_data(data)
 
 
-class CustomConverterMixin(AbstractSource):
+class ConverterMixin(AbstractSource):
 
     def __init__(self, *args, **kwargs):
         # will be applied to child classes as sublevel sources
         # do not need caching.
-        self._converter_map = converters.make_converter_map(
-            kwargs.get('converter_map', {})
-        )
+        self._converters = [self._make_converter(spec)
+                               for spec in kwargs.get('converters', [])]
 
-        super(CustomConverterMixin, self).__init__(*args, **kwargs)
+        super(ConverterMixin, self).__init__(*args, **kwargs)
 
     def dump(self):
-        dumped = super(CustomConverterMixin, self).dump()
+        dumped = super(ConverterMixin, self).dump()
 
         def convert_dict(data):
             for key, value in data.items():
@@ -301,21 +301,32 @@ class CustomConverterMixin(AbstractSource):
         return dict(convert_dict(dumped))
 
     def _customize(self, key, value):
-        converter = self._converter_map.get(key)
+        converter = self._get_converter(key)
         return converter.customize(value) if converter else value
 
     def _reset(self, key, value):
-        converter = self._converter_map[key]
+        converter = self._get_converter(key)
         return converter.reset(value) if converter else value
 
+    def _make_converter(self, converter_spec):
+        if isinstance(converter_spec, converters.Converter):
+            return converter_spec
+        else:
+            return converters.Converter(*converter_spec)
+
+    def _get_converter(self, key):
+        search_key = '.'.join(self._keychain + (key,))
+        for converter in self._converters:
+            if re.search(converter.pattern, search_key):
+                return converter
+
     def __getitem__(self, key):
-        attr = super(CustomConverterMixin, self).__getitem__(key)
+        attr = super(ConverterMixin, self).__getitem__(key)
         return self._customize(key, attr)
 
     def __setitem__(self, key, value):
-        if key in self._converter_map:
-            value = self._reset(key, value)
-        super(CustomConverterMixin, self).__setitem__(key, value)
+        value = self._reset(key, value)
+        super(ConverterMixin, self).__setitem__(key, value)
 
 
 class DefaultValueMixin(AbstractSource):
@@ -337,7 +348,7 @@ class DefaultValueMixin(AbstractSource):
 
 class Source(CacheMixin,
              DefaultValueMixin,
-             CustomConverterMixin,
+             ConverterMixin,
              LockedSourceMixin,
              AbstractSource
              ):

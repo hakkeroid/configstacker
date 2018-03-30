@@ -1,50 +1,52 @@
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple
+import collections
 import datetime
 import distutils
+import fnmatch
+import re
 
 import six
 
 __all__ = ['bools', 'dates', 'datetimes']
 
 
-Converter = namedtuple('Converter', 'key customize reset')
+class Converter(collections.namedtuple('_', 'key customize reset')):
+    def __new__(cls, key, customize, reset):
+        return super(Converter, cls).__new__(cls, key, customize, reset)
 
-def bools():
+    @property
+    def pattern(self):
+        return fnmatch.translate(self.key)
+
+    def __repr__(self):
+        return "Converter(key='{self.key}', " \
+               "customize='{self.customize.__name__}', " \
+               "reset='{self.reset.__name__}')".format(self=self)
+
+
+def bools(key):
     def to_bool(value):
         return bool(distutils.util.strtobool(value))
 
-    return (to_bool, str)
+    return Converter(key, to_bool, str)
 
 
-def dates(fmt='%Y-%m-%d'):
+def dates(key, fmt='%Y-%m-%d'):
     def to_obj(date_str):
         return datetime.datetime.strptime(date_str, fmt).date()
 
     def to_str(date_obj):
         return date_obj.strftime(fmt)
 
-    return (to_obj, to_str)
+    return Converter(key, to_obj, to_str)
 
 
-def datetimes(fmt='%Y-%m-%dT%H:%M:%S'):
+def datetimes(key, fmt='%Y-%m-%dT%H:%M:%S'):
     def to_obj(date_str):
         return datetime.datetime.strptime(date_str, fmt)
 
     def to_str(datetime_obj):
         return datetime_obj.strftime(fmt)
 
-    return (to_obj, to_str)
-
-
-def make_converter_map(mapping):
-    def create_converter(mapping):
-        for key, values in six.iteritems(mapping):
-            try:
-                yield key, Converter(key, *values)
-            except TypeError:
-                # Is already a Converter.
-                yield key, values
-
-    return dict(create_converter(mapping))
+    return Converter(key, to_obj, to_str)

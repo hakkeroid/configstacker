@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import distutils
+import re
 
 from collections import defaultdict, deque
+
+import six
 
 from .. import converters, strategies
 from . import base, dictsource
@@ -170,43 +173,64 @@ class StackedConfig(base.Source):
     def __getitem__(self, key):
         # will be used as input for a new sublevel config with the
         # key added to the keychain.
-        subqueue = deque()
+        subsections = deque()
+
+        converter = self._get_converter(key)
 
         strategy = self.strategy_map.get(key)
-        converter = self._converter_map.get(key)
         result = strategies.EMPTY
 
         for source in self.source_list:
             try:
                 value = source[key]
             except KeyError:
+                # continue until we found the key in one of the sources.
                 continue
 
-            if converter:
+            # the key was found and holds a subsection, so either..
+            if isinstance(value, base.Source):
+
+                # .. convert the whole section when the user asked
+                # for it specifically.
+                if converter:
+                    value = converter.customize(value)
+
+                # .. or otherwise add it to the subsections so that we
+                # can gather all of them from all sources and put them
+                # together into a new subconfig afterwards.
+                else:
+                    subsections.appendleft(source.get_root())
+                    continue
+
+            # the key was found and holds a normal value instead.
+            else:
                 if not source.is_typed():
                     value = self._get_typed_value(key, value)
 
-                value = converter.customize(value)
+                if converter:
+                    value = converter.customize(value)
 
-            if isinstance(value, base.Source):
-                subqueue.appendleft(source.get_root())
-                continue
-
-            if not converter and not source.is_typed():
-                value = self._get_typed_value(key, value)
-
+            # the key was either a normal value or a subsection that was
+            # converted to a custom object. In both cases we still apply
+            # a strategy if the user set one. If the user did specify
+            # one this also means we will continue looking for the key
+            # in other sources, too. Therefore we are not returning the
+            # value just yet.
             if strategy:
                 result = strategy(result, value)
             else:
                 return value
 
-        # in the while loop we always ended up in any of the continue
-        # statements which means either the key was not found or the key
-        # is a sublevel source or it is untyped.
+        # we exited the for-loop without returning a value because..
+        # .. the user specified a strategy so that we had to iterate
+        # all sources.
         if strategy:
             return result
-        elif subqueue:
-            return self._make_subconfig(subqueue, key)
+        # .. or the key held a subsection and we have to convert them to
+        # a subconfig.
+        elif subsections:
+            return self._make_subconfig(subsections, key)
+        # .. or the key really wasn't found at all.
         else:
             raise KeyError("Key '%s' was not found" % key)
 
@@ -268,7 +292,7 @@ class StackedConfig(base.Source):
                              parent=self,
                              keychain=self._keychain+(key,),
                              strategy_map=self.strategy_map,
-                             converter_map=self._converter_map
+                             converters=self._converters
                              )
 
 
