@@ -2,6 +2,7 @@
 
 import distutils
 import re
+import sys
 
 from collections import defaultdict, deque
 
@@ -16,6 +17,8 @@ except ImportError:
     from collections import MutableSequence
 
 __all__ = ['StackedConfig']
+
+PY35 = sys.version_info[0:2] >= (3, 5)
 
 
 class SourceList(MutableSequence):
@@ -94,6 +97,8 @@ class SourceList(MutableSequence):
         self._sources[index] = value
 
     def __delitem__(self, item):
+        if not PY35:
+            item -= 1
         del self._sources[item]
 
     def __iter__(self):
