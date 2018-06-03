@@ -70,3 +70,25 @@ def test_write_ini_source(ini_file):
     config.x.y.z = 50
 
     assert 'a = 10' in open(ini_file).read()
+
+
+def test_change_root_name(inimaker):
+    config = INIFile(inimaker(u"""
+        [myroot]
+        a=1
+
+        [b]
+        c=2
+
+        [b.d]
+        e=%(interpolated)s
+        interpolated=3
+
+        [b/d/f]
+        g=4
+    """), root_section='myroot')
+
+    assert config.a == '1'
+    assert config.b.c == '2'
+    assert config['b.d'].e == '3'
+    assert config['b/d/f'].g == '4'

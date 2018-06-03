@@ -18,16 +18,18 @@ class INIFile(base.Source):
     class Meta:
         is_typed = False
 
-    def __init__(self, source, subsection_token=None, **kwargs):
+    def __init__(self, source, subsection_token=None, root_section='__root__',
+            **kwargs):
         super(INIFile, self).__init__(**kwargs)
         self._source = source
         self.subsection_token = subsection_token
+        self.root_section = root_section
         self._parser = _parse_source(source)
 
     def _read(self):
         data = {}
         for section in self._parser.sections():
-            if section == '__root__':
+            if section == self.root_section:
                 subsections = []
             elif self.subsection_token and self.subsection_token in section:
                 subsections = section.split(self.subsection_token)
