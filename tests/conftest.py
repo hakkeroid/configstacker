@@ -21,7 +21,6 @@ def data():
     }
 
 
-
 @pytest.fixture
 def inimaker(tmpdir):
     def write(text, filename='config{id}.ini'):
@@ -63,8 +62,6 @@ def inspector(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         wrapper.calls += 1
-        #wrapper.args = args
-        #wrapper.kwargs = kwargs
         return fn(*args, **kwargs)
     wrapper.calls = 0
     wrapper.args = None

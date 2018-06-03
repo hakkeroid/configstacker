@@ -106,7 +106,7 @@ def test_source_items():
 def test_source_items_with_converters():
     data = {'a': {'b': 1}}
     converter_list = [
-        ('b', lambda v: 2*v, lambda v: v/2),
+        ('b', lambda v: 2 * v, lambda v: v / 2),
     ]
     config = DictSource(data, converters=converter_list)
 
@@ -166,7 +166,7 @@ def test_source_values():
 def test_source_values_with_converters():
     data = {'a': {'b': 1}}
     converter_list = [
-        ('b', lambda v: 2*v, lambda v: v/2),
+        ('b', lambda v: 2 * v, lambda v: v / 2),
     ]
     config = DictSource(data, converters=converter_list)
 
@@ -224,7 +224,7 @@ def test_read_source_with_converters():
     data = {'a': 1, 'b': {'c': 2}}
     converter_list = [
         ('a', str, int),
-        ('c', lambda v: 2*v, lambda v: v/2),
+        ('c', lambda v: 2 * v, lambda v: v / 2),
     ]
     config = DictSource(data, converters=converter_list)
 
@@ -238,7 +238,7 @@ def test_write_source_with_converters():
     data = {'a': 1, 'b': {'c': 2}}
     converter_list = [
         ('a', str, int),
-        ('c', lambda v: 2*v, lambda v: v/2),
+        ('c', lambda v: 2 * v, lambda v: v / 2),
     ]
     config = DictSource(data, converters=converter_list)
 
@@ -306,8 +306,8 @@ def test_read_source_with_wildcard_converters():
             'x': {'b': 10,
                   'c': 20}}
     converter_list = [
-        ('a.*', lambda v: 2*v, lambda v: v/2),
-        ('*.c', lambda v: 3*v, lambda v: v/3),
+        ('a.*', lambda v: 2 * v, lambda v: v / 2),
+        ('*.c', lambda v: 3 * v, lambda v: v / 3),
     ]
     config = DictSource(data, converters=converter_list)
 

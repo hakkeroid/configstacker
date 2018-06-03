@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import io
-
 import pytest
 
 from configstacker import INIFile

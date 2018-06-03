@@ -26,12 +26,12 @@ Finally you will find the following modules in configstacker:
       merge functions for use with a StackedConfig.
     - the :py:mod:`~configstacker.utils` module contains some general
       helpers with reoccuring patterns.
+
 """
 
 
 # make modules available on simple configstacker import
-from . import strategies, converters, utils
-
+from . import converters, strategies, utils  # noqa: F401
 # make sources available on root package for convenience
-from .sources import (DictSource, Environment, INIFile, JSONFile,
-                      Source, StackedConfig, SourceList, YAMLFile)
+from .sources import (DictSource, Environment, INIFile, JSONFile,  # noqa: F401
+                      Source, SourceList, StackedConfig, YAMLFile)

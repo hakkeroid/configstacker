@@ -26,9 +26,9 @@ class SourceMeta(type):
         user_meta = dct.get('Meta')
 
         dct['_meta'] = MetaInfo(
-                readonly='_write' not in dct,
-                source_name=name,
-                is_typed=getattr(user_meta, 'is_typed', True)
+            readonly='_write' not in dct,
+            source_name=name,
+            is_typed=getattr(user_meta, 'is_typed', True)
         )
 
         return super(SourceMeta, self).__new__(self, name, bases, dct)
@@ -349,7 +349,7 @@ class ConverterMixin(AbstractSource):
         # will be applied to child classes as sublevel sources
         # do not need caching.
         self._converters = [self._make_converter(spec)
-                               for spec in kwargs.get('converters', [])]
+                            for spec in kwargs.get('converters', [])]
 
         super(ConverterMixin, self).__init__(*args, **kwargs)
 
@@ -414,7 +414,7 @@ class DefaultValueMixin(AbstractSource):
     def __getitem__(self, key):
         try:
             return super(DefaultValueMixin, self).__getitem__(key)
-        except KeyError as err:
+        except KeyError:
             if self._add_subsection:
                 super(DefaultValueMixin, self).__setattr__(key, {})
                 return super(DefaultValueMixin, self).__getitem__(key)

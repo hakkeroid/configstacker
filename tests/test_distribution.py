@@ -9,6 +9,7 @@ SOURCE_FILE_MAP = {
 
 DIST = pkg_resources.get_distribution('configstacker')
 
+
 @pytest.fixture(params=DIST.extras)
 def dependencies(request):
     extra = request.param

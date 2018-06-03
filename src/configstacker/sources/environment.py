@@ -4,8 +4,8 @@ import os
 
 import six
 
-from . import base
 from .. import utils
+from . import base
 
 __all__ = ['Environment']
 

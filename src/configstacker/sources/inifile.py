@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from collections import deque
+
+from .. import utils
+from . import base
+
 try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
 
-from . import base
-from .. import utils
 
 __all__ = ['INIFile']
 
@@ -47,7 +49,7 @@ class INIFile(base.Source):
         is_typed = False
 
     def __init__(self, source, subsection_token=None, root_section='__root__',
-            **kwargs):
+                 **kwargs):
         super(INIFile, self).__init__(**kwargs)
         self._source = source
         self.subsection_token = subsection_token

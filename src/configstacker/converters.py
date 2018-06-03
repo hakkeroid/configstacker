@@ -4,9 +4,6 @@ import collections
 import datetime
 import distutils
 import fnmatch
-import re
-
-import six
 
 __all__ = ['Converter', 'bools', 'dates', 'datetimes']
 
@@ -99,7 +96,7 @@ def dates(key, fmt='%Y-%m-%d'):
         objects.
 
     .. _strptime and strftime format: https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
-    """
+    """  # noqa: E501
     @_copy_docs(datetime.datetime.strptime)
     def to_obj(date_str):
         return datetime.datetime.strptime(date_str, fmt).date()
@@ -123,7 +120,7 @@ def datetimes(key, fmt='%Y-%m-%dT%H:%M:%S'):
         objects.
 
     .. _strptime and strftime format: https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
-    """
+    """  # noqa: E501
     @_copy_docs(datetime.datetime.strptime)
     def to_obj(date_str):
         return datetime.datetime.strptime(date_str, fmt)

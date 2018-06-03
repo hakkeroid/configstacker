@@ -22,6 +22,7 @@ __all__ = ['add', 'collect', 'merge', 'make_join', 'EMPTY']
 class _Empty(object):
     pass
 
+
 EMPTY = _Empty()
 
 

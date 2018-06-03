@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from functools import wraps
-
 __all__ = ['make_subdicts']
 
 

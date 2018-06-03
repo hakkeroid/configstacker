@@ -6,15 +6,13 @@ from configstacker import YAMLFile
 
 try:
     import yaml
-except:
+except ImportError:
     # skip all tests when yaml is not installed
     pytestmark = pytest.mark.skip(reason='Missing optional dependencies')
 
 
 @pytest.fixture
 def yaml_file(tmpdir, data):
-    import yaml
-
     path = tmpdir / 'config.yml'
 
     def loader(self):

@@ -9,10 +9,10 @@ source loaders instead as this subpackage might change and probably
 become a private package.
 """
 
-from .base import Source
-from .dictsource import DictSource
-from .environment import Environment
-from .inifile import INIFile
-from .jsonfile import JSONFile
-from .stacker import StackedConfig, SourceList
-from .yamlfile import YAMLFile
+from .base import Source  # noqa: F401
+from .dictsource import DictSource  # noqa: F401
+from .environment import Environment  # noqa: F401
+from .inifile import INIFile  # noqa: F401
+from .jsonfile import JSONFile  # noqa: F401
+from .stacker import SourceList, StackedConfig  # noqa: F401
+from .yamlfile import YAMLFile  # noqa: F401

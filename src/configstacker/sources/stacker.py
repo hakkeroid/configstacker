@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import distutils
-import re
 import sys
+from collections import deque
 
-from collections import defaultdict, deque
-
-import six
-
-from .. import converters, strategies
+from .. import strategies
 from . import base, dictsource
 
 try:
@@ -376,7 +372,7 @@ class StackedConfig(base.Source):
     def _make_subconfig(self, sources, key):
         return StackedConfig(*sources,
                              parent=self,
-                             keychain=self._keychain+(key,),
+                             keychain=self._keychain + (key,),
                              strategy_map=self.strategy_map,
                              converters=self._converters
                              )

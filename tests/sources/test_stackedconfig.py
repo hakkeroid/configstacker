@@ -3,7 +3,7 @@
 import pytest
 
 from configstacker import (DictSource, Environment, INIFile, StackedConfig,
-                           converters, strategies)
+                           strategies)
 
 
 def test_use_dictsource_on_empty_stacked_config():
@@ -410,16 +410,16 @@ def test_stacked_config_with_type_conversions(inimaker):
     typed_source1 = {
         'a': 1,
         'b': 3.0,
-        'c': 4+5j,
+        'c': 4 + 5j,
         'd': 'some string',
         'e': u'some unicode',
         'f': True,
         'g': False,
         'h': False,
         'i': True,
-        'j': [1, 2],
-        'k': (1, 2),
-        'l': set([1, 2]),
+        'm': [1, 2],
+        'n': (1, 2),
+        'o': set([1, 2]),
     }
     untyped_source1 = inimaker(u"""
         [__root__]
@@ -432,9 +432,9 @@ def test_stacked_config_with_type_conversions(inimaker):
         g=True
         h=yes
         i=nope
-        j=3, 4
-        k=3, 4
-        l=3, 4
+        m=3, 4
+        n=3, 4
+        o=3, 4
     """)
     typed1 = DictSource(typed_source1)
     untyped1 = INIFile(untyped_source1)
@@ -442,18 +442,18 @@ def test_stacked_config_with_type_conversions(inimaker):
 
     assert config.a == 10
     assert config.b == 20.01
-    assert config.c == 5+6j
+    assert config.c == 5 + 6j
     assert config.d == 'some other string'
     assert config.e == u'some other unicode'
     assert config.f is False
     assert config.g is True
-    assert config.h == True
+    assert config.h is True
     assert config.i == "nope"
     # the individual values cannot be converted
     # as we do not know their intended type
-    assert config.j == ['3', '4']
-    assert config.k == ('3', '4')
-    assert config.l == set(['3', '4'])
+    assert config.m == ['3', '4']
+    assert config.n == ('3', '4')
+    assert config.o == set(['3', '4'])
 
 
 def test_stacked_config_with_untyped_source_and_converters(inimaker):
@@ -463,7 +463,7 @@ def test_stacked_config_with_untyped_source_and_converters(inimaker):
         a=11
     """))
     converter_list = [
-        ('a', lambda v: v*2, lambda v: v/2),
+        ('a', lambda v: v * 2, lambda v: v / 2),
     ]
 
     config = StackedConfig(typed, untyped, converters=converter_list)

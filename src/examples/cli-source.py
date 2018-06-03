@@ -3,6 +3,7 @@ import sys
 
 import configstacker as cs
 
+
 class CliSource(cs.Source):
     def __init__(self, argv=None):
         self._parser = argparse.ArgumentParser()
