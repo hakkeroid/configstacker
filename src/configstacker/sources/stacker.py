@@ -170,9 +170,9 @@ class StackedConfig(base.Source):
 
         return sorted(key_iterator())
 
-    def update(self, *others):
-        for other in others:
-            for key, value in other.items():
+    def update(self, arg, **kwargs):
+        for other in (arg, kwargs):
+            for key, value in dict(other).items():
                 self[key] = value
 
     def __getitem__(self, key):

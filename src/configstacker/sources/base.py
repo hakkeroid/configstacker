@@ -113,15 +113,12 @@ class AbstractSource(object):
         for key in self.keys():
             yield key, self[key]
 
-    def update(self, *others):
+    def update(self, arg, **kwargs):
         self._check_writable()
 
         data = self._get_data()
-        for other in others:
-            if isinstance(other, Source):
-                data.update(other.dump())
-            else:
-                data.update(other)
+        for other in (arg, kwargs):
+            data.update(other)
         self._set_data(data)
 
     def __getitem__(self, key):

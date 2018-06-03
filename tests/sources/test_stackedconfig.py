@@ -345,7 +345,8 @@ def test_stacked_simple_update(container):
     data3 = container({'y': 70})
 
     config.update(data1)
-    config.b.update(data2, data3)
+    config.b.update(data2)
+    config.b.update(data3)
 
     assert config.a == 10
     assert config.x == 60

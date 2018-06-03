@@ -214,7 +214,8 @@ def test_source_update(container):
     data2 = container({'y': 5})
     expected = {'a': {'b': 1, 'x': 4, 'y': 5}}
 
-    config.a.update(data1, data2)
+    config.a.update(data1)
+    config.a.update(data2)
 
     assert config == expected
 
