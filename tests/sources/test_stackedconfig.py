@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import io
-
 import pytest
 
 from configstacker import (DictSource, Environment, INIFile, StackedConfig,
@@ -279,12 +277,12 @@ def test_source_items_prevent_shadowing_between_subsections_and_values(reverse):
     assert "conflicts" in str(exc_info.value)
 
 
-def test_source_items_with_strategies_and_untyped_source(monkeypatch):
+def test_source_items_with_strategies_and_untyped_source(monkeypatch, inimaker):
     monkeypatch.setenv('MVP_A', 100)
-    untyped_source = io.StringIO(pytest.helpers.unindent(u"""
+    untyped_source = inimaker(u"""
         [__root__]
         a=1000
-    """))
+    """)
 
     config = StackedConfig(
         Environment('MVP'),  # last source still needs a typed source
@@ -361,14 +359,14 @@ def test_stacked_simple_update(container):
     assert source2.b.y == 70
 
 
-def test_stacked_config_with_untyped_source():
+def test_stacked_config_with_untyped_source(inimaker):
     typed_source1 = {'x': 5, 'b': {'y': 6}}
     typed_source2 = {'a': 1, 'b': {'c': 2}}
-    untyped_source1 = io.StringIO(pytest.helpers.unindent(u"""
+    untyped_source1 = inimaker(u"""
         [__root__]
         a=11
-    """))
-    untyped_source2 = io.StringIO(pytest.helpers.unindent(u"""
+    """)
+    untyped_source2 = inimaker(u"""
         [__root__]
         a=10
         x=50
@@ -379,7 +377,7 @@ def test_stacked_config_with_untyped_source():
 
         [b.d]
         e=30
-    """))
+    """)
     typed1 = DictSource(typed_source1)
     typed2 = DictSource(typed_source2)
     untyped1 = INIFile(untyped_source1)
@@ -407,7 +405,7 @@ def test_stacked_config_with_untyped_source():
     assert config.b.d.e == '30'
 
 
-def test_stacked_config_with_type_conversions():
+def test_stacked_config_with_type_conversions(inimaker):
     typed_source1 = {
         'a': 1,
         'b': 3.0,
@@ -422,7 +420,7 @@ def test_stacked_config_with_type_conversions():
         'k': (1, 2),
         'l': set([1, 2]),
     }
-    untyped_source1 = io.StringIO(pytest.helpers.unindent(u"""
+    untyped_source1 = inimaker(u"""
         [__root__]
         a=10
         b=20.01
@@ -436,7 +434,7 @@ def test_stacked_config_with_type_conversions():
         j=3, 4
         k=3, 4
         l=3, 4
-    """))
+    """)
     typed1 = DictSource(typed_source1)
     untyped1 = INIFile(untyped_source1)
     config = StackedConfig(typed1, untyped1)
@@ -457,12 +455,12 @@ def test_stacked_config_with_type_conversions():
     assert config.l == set(['3', '4'])
 
 
-def test_stacked_config_with_untyped_source_and_converters():
+def test_stacked_config_with_untyped_source_and_converters(inimaker):
     typed = DictSource({'a': 1})
-    untyped = INIFile(io.StringIO(pytest.helpers.unindent(u"""
+    untyped = INIFile(inimaker(u"""
         [__root__]
         a=11
-    """)))
+    """))
     converter_list = [
         ('a', lambda v: v*2, lambda v: v/2),
     ]
@@ -490,12 +488,12 @@ def test_read_stacked_sources_with_strategies():
     assert config.b.d == [30, 40, 3, 4]
 
 
-def test_read_stacked_sources_with_strategies_and_untyped_sources(monkeypatch):
+def test_read_stacked_sources_with_strategies_and_untyped_sources(monkeypatch, inimaker):
     monkeypatch.setenv('MVP_A', 100)
-    untyped_source = io.StringIO(pytest.helpers.unindent(u"""
+    untyped_source = inimaker(u"""
         [__root__]
         a=1000
-    """))
+    """)
 
     config = StackedConfig(
         Environment('MVP'),  # last source still needs a typed source

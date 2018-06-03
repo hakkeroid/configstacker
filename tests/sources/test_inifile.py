@@ -8,9 +8,8 @@ from configstacker import INIFile
 
 
 @pytest.fixture
-def ini_file(tmpdir):
-    path = tmpdir / 'config.ini'
-    path.write(pytest.helpers.unindent(u"""
+def ini_file(inimaker):
+    path = inimaker(u"""
         [__root__]
         a=1
 
@@ -23,13 +22,13 @@ def ini_file(tmpdir):
 
         [b/d/f]
         g=4
-    """))
+    """)
 
     return path
 
 
 def test_read_ini_source(ini_file):
-    config = INIFile(str(ini_file))
+    config = INIFile(ini_file)
 
     assert config.a == '1'
     assert config.b.c == '2'
@@ -38,7 +37,7 @@ def test_read_ini_source(ini_file):
 
 
 def test_read_ini_source_from_file_object(ini_file):
-    with open(str(ini_file)) as fh:
+    with open(ini_file) as fh:
         config = INIFile(fh)
 
     assert config.a == '1'
@@ -48,7 +47,7 @@ def test_read_ini_source_from_file_object(ini_file):
 
 
 def test_read_ini_source_with_subsections(ini_file):
-    config = INIFile(str(ini_file), subsection_token='.')
+    config = INIFile(ini_file, subsection_token='.')
 
     assert config.a == '1'
     assert config.b.c == '2'
@@ -57,7 +56,7 @@ def test_read_ini_source_with_subsections(ini_file):
 
 
 def test_write_ini_source(ini_file):
-    config = INIFile(str(ini_file), subsection_token='.', auto_subsection=True)
+    config = INIFile(ini_file, subsection_token='.', auto_subsection=True)
 
     assert config.a == '1'
     assert config.b.c == '2'
@@ -70,4 +69,4 @@ def test_write_ini_source(ini_file):
     config['b/d/f'].g = 40
     config.x.y.z = 50
 
-    assert 'a = 10' in ini_file.read()
+    assert 'a = 10' in open(ini_file).read()
