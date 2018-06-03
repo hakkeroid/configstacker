@@ -5,7 +5,6 @@ import pytest
 
 SOURCE_FILE_MAP = {
     'yaml': 'YAMLFile',
-    'etcd': 'EtcdStore',
 }
 
 DIST = pkg_resources.get_distribution('configstacker')

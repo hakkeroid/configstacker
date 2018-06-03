@@ -8,15 +8,14 @@ What is configstacker?
 
 Configstacker is a python library with the goal to simplify
 configuration handling as much as possible. You can read configurations
-from different sources (e.g. files, environment variables, remote
-services like `etcd <https://coreos.com/etcd/>`_ and others) and load
-single or merge multiple sources at will. The resulting configuration
-object can be used like a dictionary or with dot-notation. If you need
-additional flexibility configstacker also allows you to specify
-converters for values or merging strategies for keys that occur multiple
-times throughout different sources. If this is still not sufficient
-enough configstacker makes it very easy for you to add additional source
-handlers.
+from different sources (e.g. files, environment variables and others)
+and load single or merge multiple sources at will. The resulting
+configuration object can be used like a dictionary or with dot-notation.
+If you need additional flexibility configstacker also allows you to
+specify converters for values or merging strategies for keys that occur
+multiple times throughout different sources. If this is still not
+sufficient enough configstacker makes it very easy for you to add
+additional source handlers.
 
 .. code-block:: python
     :name: single-source-example
@@ -60,7 +59,6 @@ handlers.
         # The order of sources defines their search priority whereas the
         # last element has the highest one.
         cs.Environment(prefix='MYAPP'),
-        cs.EtcdStore('https://my-etcd-host/'),
         cs.YAMLFile('/path/to/my/config.yml')
     )
 
@@ -118,14 +116,13 @@ However, some of the source handlers require additional packages when in
 use.
 
  * `YAMLFile` requires `pyyaml <https://pypi.python.org/pypi/PyYAML>`_
- * `EtcdStore` requires `requests <https://pypi.python.org/pypi/requests/2.13.0>`_
 
 You can use the following syntax to install all optional dependencies.
 Leave out those from the brackets you do not need.
 
 .. code::
 
-    pip install configstacker[yaml,etcd]
+    pip install configstacker[yaml]
 
 .. note::
 

@@ -16,7 +16,6 @@ configstacker
 
 .. autoclass:: configstacker.DictSource
 .. autoclass:: configstacker.Environment
-.. autoclass:: configstacker.EtcdStore
 .. autoclass:: configstacker.INIFile
 .. autoclass:: configstacker.JSONFile
 .. autoclass:: configstacker.YAMLFile

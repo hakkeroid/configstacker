@@ -10,7 +10,6 @@ are:
 
     - :any:`DictSource`
     - :any:`Environment`
-    - :any:`EtcdStore`
     - :any:`INIFile`
     - :any:`JSONFile`
     - :any:`YAMLFile`
@@ -34,5 +33,5 @@ Finally you will find the following modules in configstacker:
 from . import strategies, converters, utils
 
 # make sources available on root package for convenience
-from .sources import (DictSource, Environment, EtcdStore, INIFile, JSONFile,
+from .sources import (DictSource, Environment, INIFile, JSONFile,
                       Source, StackedConfig, SourceList, YAMLFile)

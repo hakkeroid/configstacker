@@ -11,7 +11,6 @@ REQUIREMENTS = [
 
 EXTRA_REQUIREMENTS = {
     'yaml': ['pyyaml'],
-    'etcd': ['requests'],
 }
 
 setup(
