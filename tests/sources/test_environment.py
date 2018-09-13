@@ -33,6 +33,17 @@ def test_read_environment_source_with_empty_prefix(monkeypatch):
     assert config.mvp.b.d == {'e': '3'}
 
 
+def test_read_environment_ignores_invalid_setup(monkeypatch):
+    # no subkey is specified but a value is directly stored on the
+    # prefix. We cannot sanely parse it, therefore just ignore this
+    # case.
+    monkeypatch.setenv('MVP', '1')
+
+    config = Environment(prefix='MVP')
+
+    assert len(config) == 0
+
+
 def test_write_environment_fails(monkeypatch):
     monkeypatch.setenv('MVP_A', '1')
     config = Environment(prefix='MVP', readonly=True)
