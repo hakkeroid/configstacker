@@ -6,9 +6,9 @@ from configstacker import Environment
 
 
 def test_read_environment_source(monkeypatch):
-    monkeypatch.setenv('MVP_A', 1)
-    monkeypatch.setenv('MVP_B_C', 2)
-    monkeypatch.setenv('MVP_B_D_E', 3)
+    monkeypatch.setenv('MVP_A', '1')
+    monkeypatch.setenv('MVP_B_C', '2')
+    monkeypatch.setenv('MVP_B_D_E', '3')
     config = Environment(prefix='MVP')
 
     assert config.a == '1'
@@ -17,9 +17,9 @@ def test_read_environment_source(monkeypatch):
 
 
 def test_read_environment_source_with_empty_prefix(monkeypatch):
-    monkeypatch.setenv('MVP_A', 1)
-    monkeypatch.setenv('MVP_B_C', 2)
-    monkeypatch.setenv('MVP_B_D_E', 3)
+    monkeypatch.setenv('MVP_A', '1')
+    monkeypatch.setenv('MVP_B_C', '2')
+    monkeypatch.setenv('MVP_B_D_E', '3')
     config = Environment('')
 
     assert 'path' in config
@@ -34,7 +34,7 @@ def test_read_environment_source_with_empty_prefix(monkeypatch):
 
 
 def test_write_environment_fails(monkeypatch):
-    monkeypatch.setenv('MVP_A', 1)
+    monkeypatch.setenv('MVP_A', '1')
     config = Environment(prefix='MVP', readonly=True)
 
     with pytest.raises(TypeError) as exc_info:
@@ -43,9 +43,9 @@ def test_write_environment_fails(monkeypatch):
 
 
 def test_write_environment_source(monkeypatch):
-    monkeypatch.setenv('MVP_A', 1)
-    monkeypatch.setenv('MVP_B_C', 2)
-    monkeypatch.setenv('MVP_B_D_E', 3)
+    monkeypatch.setenv('MVP_A', '1')
+    monkeypatch.setenv('MVP_B_C', '2')
+    monkeypatch.setenv('MVP_B_D_E', '3')
     config = Environment(prefix='MVP')
 
     config.a = 10

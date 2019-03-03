@@ -59,8 +59,8 @@ def test_read_stacked_sources():
 
 
 def test_read_complex_stacked_sources(monkeypatch):
-    monkeypatch.setenv('MVP1_A', 1000)
-    monkeypatch.setenv('MVP2_B_M_E', 4000)
+    monkeypatch.setenv('MVP1_A', '1000')
+    monkeypatch.setenv('MVP2_B_M_E', '4000')
 
     config = StackedConfig(
         Environment('MVP1_'),  # untyped shadowing
@@ -230,7 +230,7 @@ def test_source_values():
 
 
 def test_source_items(monkeypatch):
-    monkeypatch.setenv('MVP_A', 10)
+    monkeypatch.setenv('MVP_A', '10')
     config = StackedConfig(
         DictSource({'a': 1, 'b': {'c': 2}}),
         Environment('MVP'),
@@ -278,7 +278,7 @@ def test_source_items_prevent_shadowing_between_subsections_and_values(reverse):
 
 
 def test_source_items_with_strategies_and_untyped_source(monkeypatch, inimaker):
-    monkeypatch.setenv('MVP_A', 100)
+    monkeypatch.setenv('MVP_A', '100')
     untyped_source = inimaker(u"""
         [__root__]
         a=1000
@@ -490,7 +490,7 @@ def test_read_stacked_sources_with_strategies():
 
 
 def test_read_stacked_sources_with_strategies_and_untyped_sources(monkeypatch, inimaker):
-    monkeypatch.setenv('MVP_A', 100)
+    monkeypatch.setenv('MVP_A', '100')
     untyped_source = inimaker(u"""
         [__root__]
         a=1000
