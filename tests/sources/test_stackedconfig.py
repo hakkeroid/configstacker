@@ -20,7 +20,7 @@ def test_raise_exception_on_wrong_source_types(source, error_type):
     with pytest.raises(ValueError) as exc_info:
         StackedConfig(source)
 
-    assert "not '%s'" % error_type in str(exc_info)
+    assert "not '%s'" % error_type in str(exc_info.value)
 
 
 def test_set_keychain():

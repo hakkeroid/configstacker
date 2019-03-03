@@ -103,15 +103,15 @@ def test_prevent_adding_invalid_sources_after_instantiation():
 
     with pytest.raises(ValueError) as exc_info:
         sources.append(updated)
-    assert 'must be a subclass' in str(exc_info)
+    assert 'must be a subclass' in str(exc_info.value)
 
     with pytest.raises(ValueError) as exc_info:
         sources.insert(0, updated)
-    assert 'must be a subclass' in str(exc_info)
+    assert 'must be a subclass' in str(exc_info.value)
 
     with pytest.raises(ValueError) as exc_info:
         sources[0] = updated
-    assert 'must be a subclass' in str(exc_info)
+    assert 'must be a subclass' in str(exc_info.value)
 
 
 def test_prevent_changes_to_source_of_subconfig():
@@ -123,12 +123,12 @@ def test_prevent_changes_to_source_of_subconfig():
 
     with pytest.raises(TypeError) as exc_info:
         sources.append(updated)
-    assert 'cannot be mutated' in str(exc_info)
+    assert 'cannot be mutated' in str(exc_info.value)
 
     with pytest.raises(TypeError) as exc_info:
         sources.insert(0, updated)
-    assert 'cannot be mutated' in str(exc_info)
+    assert 'cannot be mutated' in str(exc_info.value)
 
     with pytest.raises(TypeError) as exc_info:
         sources[0] = updated
-    assert 'cannot be mutated' in str(exc_info)
+    assert 'cannot be mutated' in str(exc_info.value)

@@ -1,5 +1,6 @@
-.PHONY: requirements bootstrap clean doc tests bin
+.PHONY: clean publish check-env
 
+DIST_DIR = dist
 BUILD_DIR = build
 
 
@@ -9,22 +10,20 @@ help:
 		sed -rn '/^#:/ { N; s|^#: (.*)\n(.*):.*|\2 - \1|p }'
 
 
-
 #: remove any build and python artifacts
-clean: clean-pyc clean-build
+clean: clean-pyc clean-build clean-dist
 
+#: clean up dist directories
+clean-dist:
+	@rm -rf $(DIST_DIR)/
 
 #: clean up build directories
 clean-build:
-	rm -rf $(BUILD_DIR)/
-	@echo "--> clear distribution done"
-	@echo
-
+	@rm -rf $(BUILD_DIR)/
 
 #: remove any python artifacts
 clean-pyc:
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-	find . -name '__pycache__' -exec rm -fr {} +
-
+	@find . -name '*.pyc' -exec rm -f {} +
+	@find . -name '*.pyo' -exec rm -f {} +
+	@find . -name '*~' -exec rm -f {} +
+	@find . -name '__pycache__' -exec rm -fr {} +

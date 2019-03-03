@@ -43,7 +43,7 @@ class YAMLFile(base.Source):
 
     def _read(self):
         with open(self._source) as fh:
-            return yaml.load(fh)
+            return yaml.safe_load(fh)
 
     def _write(self, data):
         with open(self._source, 'w') as fh:

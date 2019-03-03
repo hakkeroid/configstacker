@@ -13,12 +13,18 @@ EXTRA_REQUIREMENTS = {
     'yaml': ['pyyaml'],
 }
 
+
+with open('README.rst') as file:
+    long_description = file.read()
+
+
 setup(
     name='configstacker',
     version='0.1.0',
     description='Aggregates multiple configuration sources into one'
                 ' configuration object with dot-notation or'
                 ' dictionary-like access.',
+    long_description=long_description,
     author='Philipp Busch',
     author_email='hakkeroid@philippbusch.de',
     packages=find_packages(where='src'),
@@ -32,14 +38,15 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Software Development :: Libraries',
     ],
     install_requires=REQUIREMENTS,

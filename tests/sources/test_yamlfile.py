@@ -16,7 +16,7 @@ def yaml_file(tmpdir, data):
     path = tmpdir / 'config.yml'
 
     def loader(self):
-        return yaml.load(self.path.read())
+        return yaml.safe_load(self.path.read())
 
     def writer(self, data):
         self.path.write(yaml.dump(data))
