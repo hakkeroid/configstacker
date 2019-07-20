@@ -3,13 +3,13 @@ configstacker
 
 .. start-introduction
 
-.. image:: https://gitlab.com/hakkropolis/configstacker/badges/v0.1.0/pipeline.svg
+.. image:: https://gitlab.com/hakkropolis/configstacker/badges/v0.1.1/pipeline.svg
     :alt: pipeline status
-    :target: https://gitlab.com/hakkropolis/configstacker/commits/v0.1.0
+    :target: https://gitlab.com/hakkropolis/configstacker/commits/v0.1.1
 
-.. image:: https://gitlab.com/hakkropolis/configstacker/badges/v0.1.0/coverage.svg
+.. image:: https://gitlab.com/hakkropolis/configstacker/badges/v0.1.1/coverage.svg
     :alt: coverage report
-    :target: https://gitlab.com/hakkropolis/configstacker/commits/v0.1.0
+    :target: https://gitlab.com/hakkropolis/configstacker/commits/v0.1.1
 
 
 What is configstacker?
@@ -99,7 +99,7 @@ Latest Version and History
 
 Configstacker adheres to `Semantic Versioning <http://semver.org/>`_.
 
-The current version is 0.1.0 which means configstacker is still in
+The current version is 0.1.1 which means configstacker is still in
 a planning phase. As such it is *not meant for production use*. That
 said it is already very stable and should hit its first major version
 soon.
