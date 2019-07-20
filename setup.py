@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-
 from setuptools import setup, find_packages
 
 REQUIREMENTS = [
@@ -13,6 +11,13 @@ EXTRA_REQUIREMENTS = {
     'yaml': ['pyyaml'],
 }
 
+PYTHON_REQUIREMENTS = ','.join([
+    '>=2.7',
+    '!=3.0.*',
+    '!=3.1.*',
+    '!=3.2.*',
+    '!=3.3.*'
+])
 
 with open('README.rst') as file:
     long_description = file.read()
@@ -27,12 +32,19 @@ setup(
     long_description=long_description,
     author='Philipp Busch',
     author_email='hakkeroid@philippbusch.de',
+    url='https://gitlab.com/hakkropolis/configstacker',
+    project_urls={
+        'Bug Tracker': 'https://gitlab.com/hakkropolis/configstacker/issues',
+        'Documentation': 'https://configstacker.readthedocs.io',
+        'Source Code': 'https://gitlab.com/hakkropolis/configstacker/',
+    },
+    documentation="https://configstacker.readthedocs.io",
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     include_package_data=True,
-    license="BSD",
+    license="BSD-3-clause",
     zip_safe=False,
-    keywords='configuration multi stacked configs',
+    keywords='configuration hierarchy multi stacked configs',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -49,5 +61,6 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
     install_requires=REQUIREMENTS,
-    extras_require=EXTRA_REQUIREMENTS
+    extras_require=EXTRA_REQUIREMENTS,
+    python_requires=PYTHON_REQUIREMENTS
 )
