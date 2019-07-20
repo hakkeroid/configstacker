@@ -54,7 +54,7 @@ def test_write_dict_source():
 
     assert config.a == 10
     assert config.b.c == 20
-    with pytest.raises(KeyError):
+    with pytest.raises(AttributeError):
         config.b.d.e
 
 
@@ -185,7 +185,7 @@ def test_source_setdefault():
 def test_source_setdefault_as_subsection():
     config = DictSource()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(AttributeError):
         config.a.b = 1
 
     config.setdefault('a', {}).b = 1

@@ -79,7 +79,7 @@ def test_read_complex_stacked_sources(monkeypatch):
     assert config.b.e == 400     # 'e' should not be shadowed by other 'e'
     assert config.b.m.e == 4000  # shadowed by untyped but casted to type
 
-    with pytest.raises(KeyError) as exc_info:
+    with pytest.raises(AttributeError) as exc_info:
         config.b.x
 
     # config.b.d.e overrides a dict with a value
@@ -390,7 +390,7 @@ def test_stacked_config_with_untyped_source(inimaker):
 
     assert typed2.a == 1
     assert typed2.b.c == 2
-    with pytest.raises(KeyError):
+    with pytest.raises(AttributeError):
         typed2.b.d.e
 
     assert untyped1.a == '11'

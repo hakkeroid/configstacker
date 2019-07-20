@@ -207,10 +207,10 @@ class AbstractSource(object):
             raise TypeError('%s is a read-only source' % self._meta.source_name)
 
     def __getattr__(self, name):
-        # although the key was accessed with attribute style
-        # lets keep raising a KeyError to distinguish between
-        # internal and user data.
-        return self[name]
+        try:
+            return self[name]
+        except KeyError:
+            return object.__getattribute__(self, name)
 
     def __setattr__(self, attr, value):
         if any([self._initialized is False,
@@ -254,6 +254,12 @@ class AbstractSource(object):
                 needs to be done in this method.
         """
         raise NotImplementedError
+
+    # convenience methods
+    # ===================
+    def _ipython_key_completions_(self):
+        # dict-style access tab completion for ipython
+        return list(self.keys())
 
 
 class LockedSourceMixin(AbstractSource):

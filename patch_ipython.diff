@@ -1,0 +1,15 @@
+diff --git a/.tox/shell/lib/python3.6/site-packages/IPython/core/completer.py b/.tox/shell/lib/python3.6/site-packages/IPython/core/completer.py
+index 262a65be0..8b7b65286 100644
+--- a/.tox/shell/lib/python3.6/site-packages/IPython/core/completer.py
++++ b/.tox/shell/lib/python3.6/site-packages/IPython/core/completer.py
+@@ -1002,8 +1002,8 @@ def _greedy_changed(self, change):
+         else:
+             self.splitter.delims = DELIMS
+
+-    dict_keys_only = Bool(False,
+-        help="""Whether to show dict key matches only""")
++    dict_keys_only = Bool(True,
++                          help="""Whether to show dict key matches only""").tag(config=True)
+
+     merge_completions = Bool(True,
+         help="""Whether to merge completion results into a single list
