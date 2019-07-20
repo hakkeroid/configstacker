@@ -1,0 +1,16 @@
+diff --git a/.tox/bump/lib/python3.6/site-packages/bumpversion/__init__.py b/.tox/bump/lib/python3.6/site-packages/bumpversion/__init__.py
+index 66bfb31..db5f958 100644
+--- a/.tox/bump/lib/python3.6/site-packages/bumpversion/__init__.py
++++ b/.tox/bump/lib/python3.6/site-packages/bumpversion/__init__.py
+@@ -630,9 +630,9 @@ def main(original_args=None):
+
+     # setup.cfg supports interpolation - for compatibility we must do the same.
+     if os.path.basename(config_file) == 'setup.cfg':
+-        config = ConfigParser('')
++        config = ConfigParser('', comment_prefixes=(';',))
+     else:
+-        config = RawConfigParser('')
++        config = RawConfigParser('', comment_prefixes=(';',))
+
+     # don't transform keys to lowercase (which would be the default)
+     config.optionxform = lambda option: option
