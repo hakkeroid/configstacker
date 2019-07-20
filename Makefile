@@ -2,6 +2,7 @@
 
 DIST_DIR = dist
 BUILD_DIR = build
+DOCS_BUILD_DIR = docs/build
 
 
 # put #: in front of a command to provide help for it
@@ -20,6 +21,7 @@ clean-dist:
 #: clean up build directories
 clean-build:
 	@rm -rf $(BUILD_DIR)/
+	@rm -rf $(DOCS_BUILD_DIR)/
 
 #: remove any python artifacts
 clean-pyc:
