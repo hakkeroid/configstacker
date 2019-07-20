@@ -3,6 +3,15 @@ configstacker
 
 .. start-introduction
 
+.. image:: https://gitlab.com/hakkropolis/configstacker/badges/v0.1.0/pipeline.svg
+    :alt: pipeline status
+    :target: https://gitlab.com/hakkropolis/configstacker/commits/v0.1.0
+
+.. image:: https://gitlab.com/hakkropolis/configstacker/badges/v0.1.0/coverage.svg
+    :alt: coverage report
+    :target: https://gitlab.com/hakkropolis/configstacker/commits/v0.1.0
+
+
 What is configstacker?
 ----------------------
 
@@ -53,7 +62,7 @@ additional source handlers.
     #
     import configstacker as cs
 
-    # The resulting configuration object behaves 
+    # The resulting configuration object behaves
     # the same as a single source one.
     config = cs.StackedConfig(
         # The order of sources defines their search priority whereas the
@@ -80,7 +89,7 @@ additional source handlers.
 .. stop-introduction
 
 Examples for type conversion and merging strategies can be found in the
-`documentation <http://configstacker.readthedocs.com/examples>`_.
+`documentation <http://configstacker.readthedocs.io/advanced>`_.
 
 
 Latest Version and History
@@ -135,8 +144,8 @@ Leave out those from the brackets you do not need.
 Documentation
 -------------
 
-Configstacker provides a `user documentation <https://configstacker.readthedocs.org/>`_
-on `readthedocs.io <https://readthedocs.io/>`_.
+Configstacker provides a `user documentation <https://configstacker.readthedocs.io/>`_
+on `readthedocs.org <https://readthedocs.org/>`_.
 
 
 Licensing
@@ -148,6 +157,6 @@ Please see `LICENSE <LICENSE>`_.
 Contribution
 ------------
 
-Contributions are very welcome. Please file any bugs or issues on 
-`github <https://github.com/hakkeroid/configstacker>`_ or 
-`gitlab <https://gitlab.com/hakkeroid/configstacker>`_.
+Contributions are very welcome. The main development happens on
+`gitlab <https://gitlab.com/hakkropolis/configstacker/issues>`_. For reporting
+issues you can also use `github <https://github.com/hakkeroid/configstacker/issues>`_.

@@ -21,9 +21,9 @@ with open('README.rst') as file:
 setup(
     name='configstacker',
     version='0.1.0',
-    description='Aggregates multiple configuration sources into one'
-                ' configuration object with dot-notation or'
-                ' dictionary-like access.',
+    description='Aggregates multiple configuration sources into one '
+                'configuration object with dot-notation or '
+                'dictionary-like access.',
     long_description=long_description,
     author='Philipp Busch',
     author_email='hakkeroid@philippbusch.de',
@@ -32,9 +32,9 @@ setup(
     include_package_data=True,
     license="BSD",
     zip_safe=False,
-    keywords='multi configs configuration',
+    keywords='configuration multi stacked configs',
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
@@ -42,7 +42,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
