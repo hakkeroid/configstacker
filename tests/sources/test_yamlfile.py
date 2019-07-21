@@ -12,8 +12,9 @@ except ImportError:
 
 
 @pytest.fixture
-def yaml_file(tmpdir, data):
+def empty_yaml_file(tmpdir):
     path = tmpdir / 'config.yml'
+    path.ensure()
 
     def loader(self):
         return yaml.safe_load(self.path.read())
@@ -23,8 +24,19 @@ def yaml_file(tmpdir, data):
 
     test_file = pytest.helpers.DAL(path=path, _load_data=loader,
                                    _write_data=writer)
-    test_file.data = data
     return test_file
+
+
+@pytest.fixture
+def yaml_file(empty_yaml_file, data):
+    empty_yaml_file.data = data
+    yield empty_yaml_file
+
+
+def test_read_empty_yaml_source(empty_yaml_file):
+    config = YAMLFile(str(empty_yaml_file.path))
+
+    assert len(config) == 0
 
 
 def test_lazy_read_yaml_source(yaml_file):
