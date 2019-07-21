@@ -380,6 +380,50 @@ def test_write_cached_dict_source():
     assert config._data == {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
 
 
+def test_enable_cache():
+    data = {}
+    config = DictSource(data)
+
+    config.a = 1
+
+    assert data['a'] == 1
+    assert config.a == 1
+
+    config.enable_cache()
+    config.b = 2
+
+    assert 'b' not in data
+    assert config.b == 2
+
+
+def test_disable_cache():
+    data = {}
+    config = DictSource(data, cached=True)
+
+    config.a = 1
+
+    assert 'a' not in data
+    assert config.a == 1
+
+    # prevent dropping changes unexpectedly
+    with pytest.raises(RuntimeError) as exc_info:
+        config.disable_cache()
+
+    assert 'unsaved changes in the cache' in str(exc_info.value)
+    assert 'a' not in data
+    assert config.a == 1
+
+    config.write_cache()
+    config.disable_cache()
+
+    config.b = 2
+
+    assert data['a'] == 1
+    assert data['b'] == 2
+    assert config.a == 1
+    assert config.b == 2
+
+
 def test_get_source_root():
     data = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
     config = DictSource(data, cached=True)

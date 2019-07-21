@@ -293,8 +293,35 @@ class CacheMixin(AbstractSource):
         # sublevels which are also Source instances do not need caching.
         self._use_cache = kwargs.pop('cached', False)
         self._cache = None
+        self._dirty = False
 
         super(CacheMixin, self).__init__(*args, **kwargs)
+
+    def enable_cache(self):
+        """Enable cache usage
+
+        Changes will be stored in memory until :any:`write_cache()` is called.
+        """
+        self._use_cache = True
+
+    def disable_cache(self):
+        """Disable cache usage
+
+        Changes will be written back to the underlying source immediatly.
+
+        Raises:
+            RuntimeError: Raised if there are pending changes that would get
+                          lost otherwise.
+        """
+        if self._dirty:
+            raise RuntimeError('There are unsaved changes in the cache.'
+                               'Either clear or write the cached changes')
+
+        self._use_cache = False
+
+    def __setitem__(self, key, value):
+        self._dirty = True
+        super(CacheMixin, self).__setitem__(key, value)
 
     def write_cache(self):
         """Write cached data to the underlying source.
@@ -314,6 +341,8 @@ class CacheMixin(AbstractSource):
             self._write(self._cache)
         except NotImplementedError:
             self._parent.write_cache()
+
+        self._dirty = False
 
     def clear_cache(self):
         """Empty cache without reloading it.

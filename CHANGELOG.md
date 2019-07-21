@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Source loaders can now enable and disable the caching functionality on the fly
+  with `Source.enable_cache()` and `Source.disable_cache()`.
+
 ### Changed
 - `auto_subsection` does not add subsections for private variables anymore.
 - `DictSource` now updates the original dictionary as expected.
