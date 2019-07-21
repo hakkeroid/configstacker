@@ -421,7 +421,7 @@ class DefaultValueMixin(AbstractSource):
         try:
             return super(DefaultValueMixin, self).__getitem__(key)
         except KeyError:
-            if self._add_subsection:
+            if self._add_subsection and not key.startswith('_'):
                 super(DefaultValueMixin, self).__setattr__(key, {})
                 return super(DefaultValueMixin, self).__getitem__(key)
             raise
@@ -459,7 +459,8 @@ class Source(CacheMixin,
             does not exist configstacker usually throws
             a :obj:`KeyError`. Setting this value to True causes
             configstacker to add the missing key as a new subsection
-            instead. This defaults to False as
+            instead. Only keys without a preceding _ will be considered for
+            automatic section adding. The default is False.
 
     Raises:
         KeyError: You tried to access a key that does not exist.

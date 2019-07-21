@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- `auto_subsection` does not add subsections for private variables anymore.
+
 ### Fixed
 - `YAMLFile` will use an empty dictionary instead of None when loading empty yaml files.
 - `INIFile` now properly sets the default subsection token.

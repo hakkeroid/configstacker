@@ -202,6 +202,14 @@ def test_set_missing_key_to_default_value():
     assert config.a.b == 1
     assert config.x.y == 2
 
+    # make sure that private variables that do not exist and would be added
+    # automatically as subsections otherwise raise errors
+    with pytest.raises(AttributeError):
+        config._auto_not_allowed.subsection = 10
+
+    with pytest.raises(KeyError):
+        config['_auto_not_allowed']['subsection'] = 10
+
 
 @pytest.mark.parametrize('container', [
     dict, DictSource
