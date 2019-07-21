@@ -39,7 +39,10 @@ class DictSource(base.Source):
 
     def __init__(self, data=None, **kwargs):
         super(DictSource, self).__init__(**kwargs)
-        self._data = data or {}
+        if data is None:
+            self._data = {}
+        else:
+            self._data = data
 
     def _read(self):
         # use deepcopy to prevent uncontrolled changes
@@ -47,4 +50,5 @@ class DictSource(base.Source):
         return copy.deepcopy(self._data)
 
     def _write(self, data):
-        self._data = data
+        self._data.clear()
+        self._data.update(data)

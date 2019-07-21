@@ -41,21 +41,32 @@ def test_read_dict_source():
 
 
 def test_write_dict_source():
-    data = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+    data = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}, 'z': 10}
     config = DictSource(data)
 
     assert config.a == 1
     assert config.b.c == 2
     assert config.b.d == {'e': 3}
+    assert config.z == 10
 
     config.a = 10
     config.b.c = 20
     del config.b.d.e
+    del config.z
 
     assert config.a == 10
     assert config.b.c == 20
     with pytest.raises(AttributeError):
         config.b.d.e
+    with pytest.raises(AttributeError):
+        config.z
+
+    assert data['a'] == 10
+    assert data['b']['c'] == 20
+    with pytest.raises(KeyError):
+        data['b']['d']['e']
+    with pytest.raises(KeyError):
+        data['z']
 
 
 def test_prevent_writing_to_readonly_source():

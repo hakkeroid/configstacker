@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - `auto_subsection` does not add subsections for private variables anymore.
+- `DictSource` now updates the original dictionary as expected.
 
 ### Fixed
 - `YAMLFile` will use an empty dictionary instead of None when loading empty yaml files.
