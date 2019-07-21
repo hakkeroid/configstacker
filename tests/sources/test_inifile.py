@@ -25,6 +25,18 @@ def ini_file(inimaker):
     return path
 
 
+def test_not_existing_file(tmpdir):
+    path = tmpdir / 'config.ini'
+
+    config = INIFile(str(path))
+
+    assert path.exists() is False
+
+    config.a = 1
+
+    assert path.read() == '[__root__]\na = 1\n\n'
+
+
 def test_read_ini_source(ini_file):
     config = INIFile(ini_file)
 

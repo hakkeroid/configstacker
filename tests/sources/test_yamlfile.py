@@ -39,6 +39,18 @@ def test_read_empty_yaml_source(empty_yaml_file):
     assert len(config) == 0
 
 
+def test_not_existing_file(tmpdir):
+    path = tmpdir / 'config.yaml'
+
+    config = YAMLFile(str(path))
+
+    assert path.exists() is False
+
+    config.a = 1
+
+    assert path.read() == 'a: 1\n'
+
+
 def test_lazy_read_yaml_source(yaml_file):
     config = YAMLFile(str(yaml_file.path))
 

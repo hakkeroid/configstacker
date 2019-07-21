@@ -112,6 +112,8 @@ def _parse_source(source):
     try:
         with open(source) as fh:
             parser._read(fh, fh.name)
+    except utils.FileNotFoundError:
+        pass
     except TypeError:
         parser._read(source, source)
 

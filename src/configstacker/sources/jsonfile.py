@@ -2,6 +2,7 @@
 
 import json
 
+from .. import utils
 from . import base
 
 __all__ = ['JSONFile']
@@ -33,8 +34,11 @@ class JSONFile(base.Source):
         self._source = source
 
     def _read(self):
-        with open(self._source) as fh:
-            return json.load(fh)
+        try:
+            with open(self._source) as fh:
+                return json.load(fh)
+        except utils.FileNotFoundError:
+            return {}
 
     def _write(self, data):
         with open(self._source, 'w') as fh:

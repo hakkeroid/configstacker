@@ -5,6 +5,7 @@ try:
 except ImportError:
     pass
 
+from .. import utils
 from . import base
 
 __all__ = ['YAMLFile']
@@ -42,8 +43,11 @@ class YAMLFile(base.Source):
         self._source = source
 
     def _read(self):
-        with open(self._source) as fh:
-            return yaml.safe_load(fh) or {}
+        try:
+            with open(self._source) as fh:
+                return yaml.safe_load(fh) or {}
+        except utils.FileNotFoundError:
+            return {}
 
     def _write(self, data):
         with open(self._source, 'w') as fh:

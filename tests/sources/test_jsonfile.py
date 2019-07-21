@@ -23,6 +23,18 @@ def json_file(tmpdir, data):
     return test_file
 
 
+def test_not_existing_file(tmpdir):
+    path = tmpdir / 'config.json'
+
+    config = JSONFile(str(path))
+
+    assert path.exists() is False
+
+    config.a = 1
+
+    assert path.read() == '{"a": 1}'
+
+
 def test_lazy_read_json_source(json_file):
     config = JSONFile(str(json_file.path))
 

@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
+import six
 
-__all__ = ['make_subdicts']
+__all__ = ['make_subdicts', 'FileNotFoundError']
+
+
+# as we only check for files and not directories we can live with treating
+# IOError like FileNotFoundError
+if six.PY2:
+    FileNotFoundError = IOError
+else:
+    FileNotFoundError = FileNotFoundError
 
 
 def make_subdicts(base, keychain):
