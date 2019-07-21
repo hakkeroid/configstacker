@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Fixed
 - `YAMLFile` will use an empty dictionary instead of None when loading empty yaml files.
+- `INIFile` now properly sets the default subsection token.
 
 ## [0.1.1] - 2019-07-20
 ### Added
