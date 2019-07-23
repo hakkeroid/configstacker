@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+nothing new yet
+
+## [0.2.0] - 2019-07-23
 ### Added
 - Source loaders can now enable and disable the caching functionality on the fly
   with `Source.enable_cache()` and `Source.disable_cache()`.
